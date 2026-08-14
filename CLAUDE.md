@@ -6,34 +6,36 @@ A runtime for LLM extractors, sold on observability.
 
 ## Before code
 
-**Name the check that proves it is done** — a command, an observable behavior, a falsifiable claim — before you start. If you cannot name one, you do not understand the task yet. Run it before you say you are finished; "it should work" is not a result.
+**Name the check that proves it is done** — a command to run, or a behavior to observe. If you cannot name one, you do not understand the task yet. Run it before you say you are finished; "it should work" is not a result.
 
-**Stop and ask when the request has more than one reasonable reading.** Guessing is not efficiency; a wrong guess costs more than a question. Ask one question, take the answer, keep going.
+**Name the strongest objection to what was asked**, in one line, before building it. If the request works against `docs/vision.md`, or would be better solved another way, that is the moment to say so — not in review, when it is already built.
 
-**Say when the request conflicts with the goal.** If what was asked for works against `docs/vision.md`, or would be better solved differently, say so before building it. Obeying a bad instruction is a bug, not politeness.
+**Stop and ask when two readings would produce different artifacts.** Guessing is not efficiency. Ask one question, take the answer, keep going. If nobody is there to answer, take the reading that is cheapest to reverse and say which one you took.
 
-Answers are durable — append one line to `docs/decisions.md` so nothing is decided twice.
+Answers are durable. If a different answer would have changed what got built, append it to `docs/decisions.md` so it is never asked twice.
 
 ## Building
 
-Small scope, permanent decisions. Ship the smallest thing that works end to end, then build on top of something that already works — but decide as though the decision stays. Never a stopgap meant to be replaced later.
+**Interfaces are permanent, implementations are disposable.** Names, data shapes, and boundaries are decided as though they stay. An in-memory store behind a settled interface is fine; the same store leaking its shape into callers is not. Ship the smallest thing that works end to end, then build on top of it.
 
-Fix causes at the layer that owns the concept. Name the layer before editing. If the fix needs knowledge that layer should not have, you are at the wrong layer — say where it belongs.
+**Fix causes at the layer that owns the concept.** Name the layer before editing. If the fix needs knowledge that layer should not have, you are at the wrong layer — say where it belongs.
 
-Everything you add needs a caller today. No speculative abstraction, no unrequested options, no handling for failures that cannot happen yet. If you think something extra is needed, say it instead of building it.
+**Everything you add needs a caller today.** No speculative abstraction, no unrequested options, no handling for failures that cannot happen yet. If you think something extra is needed, say it instead of building it.
 
-Read what is already here — the code, the dependency's docs and types — before reimplementing it or adding a package.
+Code no human would write, concretely: a wrapper with one caller, a config struct for two values, a layer that only forwards, error handling for an error the types rule out, an interface with one implementation and no second in sight.
+
+When two implementations both pass the check, prefer the one that deletes more code, then the one a reader understands without scrolling.
 
 ## Voice
 
-Write as the author of the codebase, not as a narrator explaining it. No comment restates its code. No reasoning survives into the product. Exceptions: directives like `//nolint`, and algorithms that are genuinely non-obvious.
+Write as the author of the codebase, not a narrator explaining it — no comment restates its code, no reasoning survives into the product. Exceptions: directives like `//nolint`, and genuinely non-obvious algorithms.
 
-Prose short, plain, specific. Cut recaps of what you just did. Cut "comprehensive", "robust", "seamless", "powerful".
+Prose short, plain, specific. Cut recaps of what you just did.
 
 ## Finishing
 
-Run an adversarial review sub-agent. Fix what is real; say what you dismissed and why.
+If you changed code, run an adversarial review sub-agent. Fix what is real; say what you dismissed and why.
 
 Update `CHANGELOG.md`.
 
-If the user corrected you this session, run `/retro` — it decides what, if anything, becomes permanent.
+When the user corrects you, append one line to `docs/corrections.md` as it happens. Run `/retro` at the end of the session to decide what, if anything, becomes permanent.
