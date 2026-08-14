@@ -44,6 +44,68 @@ Providers named: OpenAI 1,134, local runtimes (Ollama / llama.cpp / vLLM) 871,
 Anthropic 719, Google 575, LiteLLM/OpenRouter 195. Local inference is not a niche here —
 it appears in 41% of relevant repos, mostly where documents cannot leave the building.
 
+## How the call is actually written
+
+Six distinct API shapes have emerged for the same operation. Each snippet below is copied
+from that project's own README.
+
+**Patch the provider SDK** — the call site stays familiar, one extra argument carries the
+schema. This is `instructor`, and it is the shape most others are measured against.
+
+```python
+client = instructor.from_provider("openai/gpt-4o-mini")
+user = client.chat.completions.create(
+    response_model=User,
+    messages=[{"role": "user", "content": "John is 25 years old"}],
+)
+```
+
+**Schema-first method** — the literal `llm(schema, text)` signature. `sibila`:
+
+```python
+model = Models.create("llamacpp:openchat")
+model.extract(Info, "Who was the first man in the moon?")
+```
+
+**Type-first function** — no schema class at all; the return type *is* the schema.
+`marvin`:
+
+```python
+result = marvin.extract("i found $30 on the ground and bought 5 bagels for $10",
+                        int, instructions="only USD")
+```
+
+**Examples instead of a schema** — few-shot examples define the shape, and every extracted
+field is grounded back to a source span. `langextract`:
+
+```python
+result = lx.extract(text_or_documents=input_text, prompt_description=prompt,
+                    examples=examples, model_id="gemini-3.5-flash")
+```
+
+**Declarative document model** — you attach what you want to a document rather than calling
+an extractor. `contextgem`:
+
+```python
+aspect = Aspect(name="Term and termination",
+                description="Clauses on contract term and termination")
+concept = BooleanConcept(name="NDA check", description="Is the contract an NDA?")
+document.add_aspects([aspect]); document.add_concepts([concept])
+```
+
+**Schema as a separate language** — the schema lives in its own DSL file and compiles to a
+typed client. `BAML`:
+
+```python
+from baml_client import b
+resume = b.ExtractResume(resume_text)
+```
+
+The trend across the head of the corpus is away from prompt strings and toward a typed
+function boundary. BAML goes furthest by moving the prompt out of the host language
+entirely, which is also the only approach in this set that makes the prompt diffable and
+testable on its own.
+
 ## What actually enforces the structure
 
 Per-repo READMEs rarely show the mechanism — 1,675 of 2,149 (78%) describe the capability
