@@ -1,0 +1,11 @@
+- Read @README.md
+- Maintain CHANGELOG.md
+- Do not let your reasoning/thinking leak into the product - do not explain why you are doing something as if it is your draft. The code / docs are self-explantory source of truth.
+- Grow the system in layers: start from the smallest version that works end to end, add each capability on top of a product that already works. Never trade a working product for unfinished complexity.
+- Keep components modular and concerns clearly separated.
+- Prefer established, well-maintained libraries when they reduce overall complexity or improve reliability. Do not reimplement common functionality without a clear reason.
+- Lean on the dependencies already in the project before writing your own implementation or adding packages. Do not assume a library lacks a capability without checking its documentation and types.
+- Make architectural decisions for the long term. Do not accept a stopgap that only works for now and is meant to be replaced later.
+- Keep all output short and human
+- No code comments. Sole exceptions are directives (like //nolint in go) and short explanations of super-complex algorithms
+- After making any changes to the project run an independent sub-agent that conducts an adversarial review. Then get to fixing if findings are significant.
