@@ -1,36 +1,34 @@
-# ExtractLayer
+# ExtractLayer — a runtime for LLM extractors, sold on observability.
 
-A runtime for LLM extractors, sold on observability.
-
-`docs/vision.md` is what we are building and for whom. `docs/decisions.md` is what is already settled. Read both before non-trivial work, and trust them over your own inference.
+`docs/vision.md` is the intent. `docs/decisions.md` is what is settled. Read both before non-trivial work, and trust them over your own inference.
 
 ## Before code
 
-**Name the check that proves it is done** — a command to run, or a behavior to observe. If you cannot name one, you do not understand the task yet. Run it before you say you are finished; "it should work" is not a result.
+**When two readings of the request would produce different artifacts, stop and ask.** One question, then keep going. If nobody is there to answer, take the reading that is cheapest to reverse and say which one you took.
 
-**Name the strongest objection to what was asked**, in one line, before building it. If the request works against `docs/vision.md`, or would be better solved another way, that is the moment to say so — not in review, when it is already built.
+**Say the strongest objection to the request, in one line, before building it.** If it works against the vision, or has a better solution, that is the moment to say so — not after it exists.
 
-**Stop and ask when two readings would produce different artifacts.** Guessing is not efficiency. Ask one question, take the answer, keep going. If nobody is there to answer, take the reading that is cheapest to reverse and say which one you took.
+**Say what would prove it done** — a command to run, or a behavior to observe.
 
-Answers are durable. If a different answer would have changed what got built, append it to `docs/decisions.md` so it is never asked twice.
+## While building
 
-## Building
+**Before touching a file the task did not name, say what forces it.** Test scaffolding, a version bump, a refactor, a new config file. If nothing forces it, propose it instead of building it.
 
-**Interfaces are permanent, implementations are disposable.** Names, data shapes, and boundaries are decided as though they stay. An in-memory store behind a settled interface is fine; the same store leaking its shape into callers is not. Ship the smallest thing that works end to end, then build on top of it.
+**When you are about to write the same guard, coercion, or fallback a second time, stop.** The first site was already the wrong place. Say which layer owns the value and settle it there.
 
-**Fix causes at the layer that owns the concept.** Name the layer before editing. If the fix needs knowledge that layer should not have, you are at the wrong layer — say where it belongs.
+**Everything you add needs a caller today.** No speculative abstraction, no unrequested options, no error paths the types rule out. The shapes to notice: a wrapper with one caller, a config struct for two values, a layer that only forwards.
 
-**Everything you add needs a caller today.** No speculative abstraction, no unrequested options, no handling for failures that cannot happen yet. If you think something extra is needed, say it instead of building it.
+**Never let a command write outside the project directory.** Global installs, machine-level config — use the project-local form, or ask.
 
-Code no human would write, concretely: a wrapper with one caller, a config struct for two values, a layer that only forwards, error handling for an error the types rule out, an interface with one implementation and no second in sight.
+When two versions both pass, keep the one that deletes more code.
 
-When two implementations both pass the check, prefer the one that deletes more code, then the one a reader understands without scrolling.
+## When writing anything
 
-## Voice
+**Claim only what a check you actually ran covers.** "Every case", "now works", coverage claims in a changelog — name the command that shows it, or weaken the sentence. Evidence against you goes in too.
 
-Write as the author of the codebase, not a narrator explaining it — no comment restates its code, no reasoning survives into the product. Exceptions: directives like `//nolint`, and genuinely non-obvious algorithms.
+No comment restates its code. No reasoning survives into the product. Exceptions: directives like `//nolint`, and genuinely non-obvious algorithms.
 
-Prose short, plain, specific. Cut recaps of what you just did.
+Prose short, plain, specific. No recaps of what you just did.
 
 ## Finishing
 
@@ -38,4 +36,4 @@ If you changed code, run an adversarial review sub-agent. Fix what is real; say 
 
 Update `CHANGELOG.md`.
 
-When the user corrects you, append one line to `docs/corrections.md` as it happens. Run `/retro` at the end of the session to decide what, if anything, becomes permanent.
+Log each correction to `docs/corrections.md` as it happens. Run `/retro` to decide what becomes permanent.

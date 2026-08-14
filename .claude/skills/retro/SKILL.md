@@ -39,13 +39,15 @@ If a new decision resolves something `docs/vision.md` lists as an open tension, 
 
 ## 4. Spend the CLAUDE.md budget
 
-`CLAUDE.md` is capped at **600 words**. It loads into every turn of every session, and instruction-following degrades as it grows — a rule added is attention taken from every rule already there. The cap is words, not lines, so that merging two rules into one long sentence is not a way to dodge it.
+`CLAUDE.md` is capped at **500 words and 80 lines**, whichever binds first. It loads into every turn of every session, and selective ignoring sets in around 80 lines — past that, adding a rule costs you an existing one at random. The word cap is there so merging two rules into one long sentence cannot dodge the line cap.
 
 A rule may be added only if:
 
-- **It has a trigger.** A situation an agent can recognize. "Be careful with migrations" has none. "Before editing a migration, check whether it has already been applied" does.
-- **It is not default behavior.** If a capable agent already does this unprompted, it is not a rule, it is decoration.
+- **Its trigger is an action, not a diagnosis.** The rule has to fire at a moment recognizable by what the agent is about to *do* — open a file, write a line, run a command, send a summary. Rules that first require noticing an abstract situation do not fire, because the agent never notices it is in that situation. Measured here: "fix causes at the layer that owns the concept" changed behavior in 0 of 6 trials on a task built to trigger it. The same intent aimed at an action — "when you are about to write the same coercion a second time, stop" — has a moment to fire at.
+- **It is not default behavior.** If a capable agent already does this unprompted, it is not a rule, it is decoration. Verifying work is default; claiming more than the check covered is not.
 - **It fits the cap.** If it does not, evict — and state what the evicted rule was for and why that is now safe to lose. Never evict by ranking rules "weakest": a rule that works silently generates no corrections and will always look weakest, so ranking evicts the best rules first.
+
+Rules that survive these gates still only persuade. `CLAUDE.md` is delivered as an ordinary message and the model judges its relevance turn by turn, so a rule that must hold every time belongs in a hook, a lint, or a test — not in a fourth restatement here.
 
 ## 5. Propose, never apply
 

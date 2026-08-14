@@ -6,14 +6,16 @@
 
 - `docs/vision.md`, `docs/decisions.md` — product intent and settled questions, so agents read intent instead of inferring it.
 - `docs/corrections.md` — running log of agent corrections, written as they happen. Gives the retro loop something to count.
-- `.claude/skills/retro` — routes a correction to the file it belongs in, checks whether an existing rule already covers it, and caps `CLAUDE.md` at 600 words with eviction.
+- `.claude/skills/retro` — routes a correction to the file it belongs in, checks whether an existing rule already covers it, and caps `CLAUDE.md` with eviction.
 - `README.md`.
 
 ### Changed
 
-- `CLAUDE.md` rewritten. Rules now have triggers: name the check and run it, name the strongest objection before building, stop when two readings produce different artifacts, fix at the layer that owns the concept, everything needs a caller today.
-- Permanence split from scope — interfaces are permanent, implementations disposable — replacing the contradiction between "smallest thing that works" and "never a stopgap".
+- `CLAUDE.md` rewritten so every rule fires on a recognizable action — about to touch an unnamed file, about to write a duplicate guard, about to claim done. Rules that instead required diagnosing an abstract situation changed behavior in 0 of 6 measured trials.
+- Permanence split from scope — interfaces permanent, implementations disposable — replacing the contradiction between "smallest thing that works" and "never a stopgap". Contradictory rules cause both to be ignored.
+- Cap lowered to 500 words / 80 lines; selective ignoring sets in around 80 lines.
+- Retro's admission gate now requires a rule's trigger to be an action rather than a diagnosis, and routes must-hold rules to hooks or tests instead of a fourth restatement.
 
 ### Removed
 
-- Rules that restated default model behavior or had no recognizable trigger: "keep components modular", "read what is already here", the banned-adjective list.
+- Rules that restated default model behavior or had no recognizable trigger: "keep components modular", "read what is already here", the banned-adjective list, and "run your tests" (agents verified unprompted in every trial).
