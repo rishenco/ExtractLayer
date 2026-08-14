@@ -20,6 +20,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `scripts/gates/70-approved-plan.sh`: source changes must trace to a human-approved plan, or
   carry a `Skips-plan-gate:` trailer that records the skip.
 
+- `scripts/gates/55-lint-config.sh`: a workspace must configure its own linter, and the
+  repo-level content gates stop scanning it once it does. Recorded in
+  `docs/decisions/0003-repo-gates-are-a-floor.md`.
+- `docs/working.md`: how to run the development process efficiently.
+
 ### Fixed
 
 - Boundary and linter config checks accepted a workspace only when every filename variant

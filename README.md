@@ -27,6 +27,8 @@ make check       run every gate
 make gates       list gates and what each enforces
 ```
 
+`docs/working.md` is how to run this efficiently in practice.
+
 ## Layout
 
 ```

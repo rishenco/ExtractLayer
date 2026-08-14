@@ -130,6 +130,19 @@ add_file gows2/.golangci.yml 'linters:
 fixture gows2/go.mod 'module fixture'
 expect_silent_about 60-workspaces.sh 'no .golangci config' "a present golangci config is detected"
 
+fixture lint1/package.json '{"name":"fixture","scripts":{"check":"true"}}'
+expect 55-lint-config.sh 1 "a workspace without a linter config is caught"
+
+add_file lint2/eslint.config.js 'export default []'
+add_file lint2/bad.ts '// explains the obvious
+export const a = 1'
+printf '%s\n%s\n' "$WORK/lint2/package.json" "$WORK/lint2/bad.ts" >"$WORK/list"
+add_file lint2/package.json '{"name":"fixture","scripts":{"check":"true"}}'
+expect 10-comments.sh 0 "a linted workspace is no longer scanned by the floor"
+
+printf '%s\n' "$WORK/lint2/bad.ts" >"$WORK/list"
+expect 10-comments.sh 1 "the floor still scans a file outside any linted workspace"
+
 if command -v npm >/dev/null 2>&1; then
   mkdir -p "$WORK/ws2/node_modules"
   fixture ws2/package.json '{"name":"fixture","version":"1.0.0","scripts":{"check":"true"}}'

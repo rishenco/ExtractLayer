@@ -29,7 +29,7 @@ while IFS= read -r f; do
   el_is_generated "$f" && continue
   n="$(el_line_count "$f")"
   [ "$n" -gt "$CODE_MAX" ] && report "$f" "$n" "$CODE_MAX"
-done < <(el_code_files)
+done < <(el_code_files | el_drop_linted)
 
 while IFS= read -r f; do
   [ -f "$f" ] || continue

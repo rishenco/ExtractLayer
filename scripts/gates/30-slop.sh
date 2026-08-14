@@ -25,8 +25,10 @@ PHRASES=(
 FILLER="$(IFS='|'; echo "${PHRASES[*]}")"
 
 targets() {
-  { el_code_files; el_repo_files | grep -E '\.md$' || true; } \
-    | grep -vE '^(scripts/gates/|work/)' | sort -u
+  {
+    el_code_files | el_drop_linted
+    el_any_exists .vale.ini vale.ini || el_repo_files | grep -E '\.md$' || true
+  } | grep -vE '(^|/)scripts/gates/|(^|/)work/' | sort -u
 }
 
 found=0

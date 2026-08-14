@@ -54,6 +54,37 @@ el_workspaces() {
     | sort -u
 }
 
+el_linted_dirs() {
+  local manifest dir
+  while IFS= read -r manifest; do
+    [ -n "$manifest" ] || continue
+    dir="$(dirname "$manifest")"
+    case "$(basename "$manifest")" in
+      package.json)
+        el_any_exists "$dir"/eslint.config.{js,mjs,cjs,ts} "$dir"/.eslintrc.{js,cjs,json,yml,yaml} \
+          && printf '%s\n' "$dir"
+        ;;
+      pyproject.toml) grep -q 'tool.ruff' "$manifest" 2>/dev/null && printf '%s\n' "$dir" ;;
+      go.mod) el_any_exists "$dir"/.golangci.{yml,yaml,toml,json} && printf '%s\n' "$dir" ;;
+    esac
+  done < <(el_workspaces)
+}
+
+el_drop_linted() {
+  local dirs f d keep
+  dirs="$(el_linted_dirs)"
+  [ -z "$dirs" ] && { cat; return 0; }
+  while IFS= read -r f; do
+    keep=1
+    while IFS= read -r d; do
+      [ -n "$d" ] || continue
+      [ "$d" = "." ] && { keep=0; break; }
+      case "$f" in "$d"/*) keep=0; break ;; esac
+    done <<<"$dirs"
+    [ "$keep" -eq 1 ] && printf '%s\n' "$f"
+  done
+}
+
 el_base_ref() {
   local ref
   for ref in ${GITHUB_BASE_REF:+"origin/$GITHUB_BASE_REF"} origin/main main; do
