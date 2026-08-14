@@ -1,6 +1,6 @@
 # LLM extraction on GitHub: who builds `llm(system, raw_text) -> structured_data`
 
-Survey of 2,641 GitHub repositories, August 2026.
+Survey of 3,133 GitHub repositories, August 2026.
 
 ## The short version
 
@@ -10,43 +10,43 @@ three lines against a provider API, and roughly a dozen mature libraries wrap it
 What is *not* solved is everything around the call: knowing whether an extraction was
 right, correcting it when it wasn't, and running it over a corpus at a price you can
 predict. The corpus splits sharply — a small head of serious infrastructure, and a very
-long tail of one-off pipelines rebuilding the same call. Median star count of the 1,738
+long tail of one-off pipelines rebuilding the same call. Median star count of the 2,149
 relevant repos is **2**.
 
 ## Corpus at a glance
 
 | | |
 |---|---|
-| Unique repos found | 2,641 |
-| Passed relevance filter | 1,738 |
-| READMEs fetched and parsed | 2,235 |
-| Distinct search queries | 92 |
-| Created 2025 or later | 1,375 of 1,738 (79%) |
-| Pushed since Dec 2025 | 1,488 of 1,738 (86%) |
-| Archived | 18 |
+| Unique repos found | 3,133 |
+| Passed relevance filter | 2,149 |
+| READMEs fetched and parsed | 3,025 |
+| Distinct search queries | 106 |
+| Created 2025 or later | 1,712 of 2,149 (80%) |
+| Pushed since Dec 2025 | 1,827 of 2,149 (85%) |
+| Archived | 26 |
 
 Star distribution of the relevant set:
 
 | Stars | Repos |
 |---|---|
-| < 10 | 1,215 (70%) |
-| 10–99 | 305 |
-| 100–999 | 131 |
-| ≥ 1,000 | 87 |
+| < 10 | 1,548 (72%) |
+| 10–99 | 367 |
+| 100–999 | 144 |
+| ≥ 1,000 | 90 |
 
-Languages: Python 1,054 (61%), TypeScript 172, Jupyter 143, JavaScript 73, Rust 46, Go 38.
+Languages: Python 1,290 (60%), TypeScript 225, Jupyter 175, JavaScript 95, Rust 56, Go 52.
 
-Schema is written as a Pydantic model in 614 repos, as literal JSON Schema in 382, and as
-Zod in 84. Pydantic is the de facto schema language of this space; Zod is its TypeScript
-equivalent and trails by roughly 7×.
+Schema is written as a Pydantic model in 727 repos, as literal JSON Schema in 474, and as
+Zod in 114. Pydantic is the de facto schema language of this space; Zod is its TypeScript
+equivalent and trails by roughly 6×.
 
-Providers named: OpenAI 928, local runtimes (Ollama / llama.cpp / vLLM) 714,
-Anthropic 591, Google 480, LiteLLM/OpenRouter 165. Local inference is not a niche here —
+Providers named: OpenAI 1,134, local runtimes (Ollama / llama.cpp / vLLM) 871,
+Anthropic 719, Google 575, LiteLLM/OpenRouter 195. Local inference is not a niche here —
 it appears in 41% of relevant repos, mostly where documents cannot leave the building.
 
 ## What actually enforces the structure
 
-Per-repo READMEs rarely show the mechanism — 1,354 of 1,738 (78%) describe the capability
+Per-repo READMEs rarely show the mechanism — 1,675 of 2,149 (78%) describe the capability
 without showing the call. So mechanism adoption is better measured across GitHub by code
 search. Counts are files, not projects, and include forks and vendored copies; treat them
 as relative magnitudes.
@@ -142,22 +142,31 @@ This is the layer the question describes.
 | [lightfeed/extractor](https://github.com/lightfeed/extractor) | 320 | Robust web data extraction |
 
 **L4 — Vertical applications.** Where the job-posting-parser example lives. This is the
-bulk of the corpus by count and the thinnest by substance: overwhelmingly single-author
-repos under 10 stars.
+bulk of the corpus by count and the thinnest by substance.
+
+Domain is tagged from the repo description and README tagline only, not the README body —
+scoping it to the body inflated every vertical by 25–50%, because general-purpose
+libraries like BAML and Mirascope use "extract a resume" as their headline example.
 
 | Domain | Repos | Comment |
 |---|---|---|
-| Invoices / finance | 229 | Densest vertical; invoice-to-JSON is the canonical demo |
-| Jobs / recruiting | 228 | Resume parsers dominate; job-posting parsers are mostly scrapers |
-| Research papers | 167 | Often academic tooling |
-| Medical / clinical | 97 | Local models heavily favoured |
-| Knowledge graphs | 96 | Entity + relation extraction into a graph |
-| E-commerce | 46 | |
-| Legal | 46 | Contract clause extraction |
-| News / media | 26 | |
-| Logs / security | 23 | |
-| Real estate | 13 | |
-| ID / forms | 11 | |
+| Invoices / finance | 191 | Densest vertical; invoice-to-JSON is the canonical demo |
+| Jobs / recruiting | 160 | Resume/ATS parsers outnumber job-posting parsers ~2:1 |
+| Research papers | 100 | Often academic tooling |
+| Medical / clinical | 93 | Local models heavily favoured |
+| Knowledge graphs | 80 | Entity + relation extraction into a graph |
+| Legal | 35 | Contract clause extraction |
+| E-commerce | 22 | |
+| Logs / security | 17 | |
+| News / media | 13 | |
+| Real estate | 10 | |
+| ID / forms | 8 | |
+
+The two densest verticals are almost entirely hobby work. Across the 191 invoice repos the
+median star count is 1 and only 4 clear 100 stars; across the 160 job/recruiting repos the
+median is 1 and exactly one clears 100. Nobody has consolidated either vertical — which is
+either an opportunity or a warning that per-vertical extraction does not hold value on its
+own.
 
 **L5 — Research.** 30 repos: benchmarks, paper implementations, evaluation harnesses.
 [urchade/GLiNER](https://github.com/urchade/GLiNER) (3,537) is the notable non-LLM
@@ -165,22 +174,23 @@ alternative — a small dedicated NER model that is far cheaper than a generativ
 
 ## What almost nobody does
 
-Signal prevalence across the 1,738 relevant repos, measured from README and manifest text:
+Signal prevalence across the 2,149 relevant repos, measured from README and manifest text:
 
 | Capability | Repos | Share |
 |---|---|---|
-| Batch / concurrent processing | 1,006 | 58% |
-| PDF handling | 738 | 42% |
-| Any evaluation or accuracy discussion | 579 | 33% |
-| OCR / vision | 501 | 29% |
-| Cost or token tracking | 467 | 27% |
-| Human review / correction loop | 437 | 25% |
-| Retry on validation failure | 317 | 18% |
+| Batch / concurrent processing | 1,201 | 56% |
+| PDF handling | 850 | 40% |
+| Any evaluation or accuracy discussion | 700 | 33% |
+| OCR / vision | 583 | 27% |
+| Cost or token tracking | 566 | 26% |
+| Human review / correction loop | 514 | 24% |
+| Retry on validation failure | 386 | 18% |
 
-The gap is consistent. Two thirds of these projects never mention measuring whether the
-extraction is correct, three quarters have no correction path when it isn't, and 82% do
-not retry on validation failure. Almost none version their schemas — a schema change and
-a model change are indistinguishable in every repo examined.
+These are *mentions*, not audited capabilities — a repo counted under "evaluation" may only
+say the word once. That makes them an upper bound, which sharpens the finding rather than
+softening it: even counting generously, two thirds of these projects never raise the
+question of whether the extraction is correct, three quarters describe no correction path
+when it isn't, and 82% never mention retrying on validation failure.
 
 Only [google/langextract](https://github.com/google/langextract) treats source grounding —
 mapping each extracted field back to a character span in the input — as a first-class
@@ -189,26 +199,26 @@ reviewable output and an unfalsifiable one.
 
 ## Method
 
-GitHub repository search via 92 queries across four families: mechanism vocabulary
+GitHub repository search via 106 queries across four families: mechanism vocabulary
 (`structured output`, `constrained decoding`, `json schema`), extraction vocabulary
 (`information extraction`, `unstructured to structured`), modality (`pdf`, `ocr`, `web
 scraping`), and vertical (`invoice`, `resume`, `clinical`, `contract`). Star-sliced
 queries (`stars:20..80`, `stars:81..400`) reached past the 1,000-result ranking cap.
 
 Every repo was then independently validated by fetching its README from
-`raw.githubusercontent.com` — 2,235 of 2,641 returned content, and a 12-repo sample of the
+`raw.githubusercontent.com` — 3,025 of 3,133 returned content, and a 12-repo sample of the
 remainder confirmed all exist but have no README file. Classification signals were
 computed by regex over README plus package manifest. Star counts were spot-checked against
 fresh API queries and matched exactly.
 
-Reproduce from `data/corpus.csv` (all 2,641) and `data/shortlist.csv` (the 1,738 relevant).
+Reproduce from `data/corpus.csv` (all 3,133) and `data/shortlist.csv` (the 2,149 relevant).
 
 ## Limits
 
 - **Layer assignment is ~67% accurate.** Measured by hand-labelling a 30-repo held-out
   sample. Use the layer column for shape, not for per-repo truth. The named projects in
   the tables above were verified individually.
-- **Coverage is broad but not saturated.** 83% of repos were surfaced by exactly one
+- **Coverage is broad but not saturated.** 82% of repos were surfaced by exactly one
   query, meaning more queries would still find more repos. Keyword search also has a
   systematic blind spot: it initially missed 32 of 49 known landmark projects, including
   `instructor`, because repo search matches name, description, and topics — and much of
