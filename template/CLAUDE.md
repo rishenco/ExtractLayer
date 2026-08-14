@@ -2,6 +2,18 @@
 
 `docs/vision.md` is the intent. `docs/decisions.md` is what is settled. Read both before non-trivial work, and trust them over your own inference.
 
+## Facts
+
+What cannot be inferred from the code, and where a wrong guess costs a session.
+
+- Build `<cmd>` · Test `<cmd>` · Lint/typecheck `<cmd>`
+- Entry points: `<where a request or command actually enters>`
+- Owns what: `<package> — <responsibility>`, one line each, only where it is not obvious
+- Do not touch: `<generated dirs, vendored code, legacy zones>`
+- Reaches outside: `<commands that hit a db, a network, a paid API>`
+
+Keep this to what rarely changes. Anything longer lives in `docs/` and is pointed at, not inlined.
+
 ## Before code
 
 **When two readings of the request would produce different artifacts, stop and ask.** One question, then keep going. If nobody is there to answer, take the reading that is cheapest to reverse and say which one you took.

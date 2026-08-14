@@ -8,7 +8,11 @@ Copy `CLAUDE.md`, `docs/`, and `.claude/skills/retro/` into the repo root. Edit 
 
 ## How it holds together
 
-`CLAUDE.md` is behavior — how an agent works. It is deliberately small, because it loads into every turn and instruction-following degrades as it grows.
+`CLAUDE.md` holds two different things, and the first matters more.
+
+**Facts** are what an agent cannot infer and will otherwise waste a session guessing: the test command, which package owns what, which directories are generated. This is pure information gain — it does not have to persuade anyone, so it never fails to land. Surveyed public files (opencode, Sentry, Cloudflare, Next.js, Supabase) spend roughly **60–65% of their length here**. Fill this in first; it is the highest-value thing in the file.
+
+**Behavior** is how the agent works. It is weaker than it looks — the model judges each rule's relevance turn by turn — so it stays short and every rule earns its slot.
 
 `docs/vision.md` and `docs/decisions.md` are intent — what to build and what is already settled. Most of what you would otherwise write as rules is really missing intent, and putting intent in the rules file is what turns it into noise nothing obeys.
 
@@ -22,7 +26,9 @@ Three things that measurably matter, in order:
 2. **Trigger on an action, not a diagnosis.** A rule fires at a moment recognizable by what the agent is about to *do* — open a file, write a line, claim done. Rules that first require noticing an abstract situation do not fire, because the agent never notices it is in one.
 3. **Cut anything already default.** Agents ran their own tests unprompted in every trial, so "run your tests" was pure decoration. What they did *not* do by default was keep their claims inside what those tests covered.
 
-Keep it under ~500 words and ~80 lines. Past roughly 80 lines, adding a rule costs you an existing one at random.
+Keep the behavior half under ~80 lines. Past roughly that, adding a rule costs you an existing one at random. Facts are cheaper per line than rules — they are looked up, not obeyed — but the same budget eventually applies.
+
+When a project outgrows one file, do what the large repos do: keep the root file short and scope the rest by subtree (`src/AGENTS.md`, `frontend/AGENTS.md`) or point at a per-package doc, so a session loads only what its work touches.
 
 ## What this cannot do
 
