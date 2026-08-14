@@ -14,7 +14,7 @@
 
 **Before touching a file the task did not name, say what forces it.** Test scaffolding, a version bump, a refactor, a new config file. If nothing forces it, propose it instead of building it.
 
-**When you are about to write the same guard, coercion, or fallback a second time, stop.** The first site was already the wrong place. Say which layer owns the value and settle it there.
+**A second copy of the same guard, coercion, or fallback does force it.** When you are about to write one, stop: open the file the value comes from and settle it there, rather than adding site number two.
 
 **Everything you add needs a caller today.** No speculative abstraction, no unrequested options, no error paths the types rule out. The shapes to notice: a wrapper with one caller, a config struct for two values, a layer that only forwards.
 
