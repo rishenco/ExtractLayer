@@ -11,9 +11,12 @@
 - `research/data/shortlist.csv` — the 2,150 repos that passed the relevance filter.
 - `research/data/layer-accuracy-sample.csv` — hand-labelled 30-repo sample backing the
   ~60% layer-accuracy figure.
-- `research/data/landmark-profiles.csv` — call shape, enforcement mechanism, retry and
-  grounding support for 24 landmark projects, each adversarially verified against primary
-  sources (0 of 24 overturned).
+- `research/data/landmark-profiles.csv` — call shape, enforcement mechanism, models
+  supported, retry and grounding support for 24 landmark projects, each adversarially
+  verified against primary sources (0 of 24 overturned), plus the design rationale for
+  each mechanism choice.
+- "Which mechanism, and why" section grouping the 24 projects by enforcement mechanism,
+  with the models each drives and why it made that choice.
 
 ### Fixed
 - README fetcher advanced its filename loop only on HTTP 404, so timeouts and 5xx cached

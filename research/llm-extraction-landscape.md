@@ -169,6 +169,77 @@ parameter, a marker this table does not search. What the two tables jointly supp
 narrower and safer: provider-side enforcement is the default path, and dedicated
 extraction libraries are a minority practice at both scales.
 
+## Which mechanism, and why
+
+Mechanism choice tracks one variable more than any other: **whether the project has raw
+access to the decoder.** All four projects that constrain decoding ship a local backend
+with logits access; all four that rely purely on a provider-side mechanism have none. The
+eight adaptive projects are the ones spanning both worlds, and they respond by making the
+mechanism swappable rather than picking one.
+
+Models column lists what each project can drive, not what it recommends. Rationale is drawn
+from each project's own documentation; the profiles behind it are in
+`data/landmark-profiles.csv`.
+
+### Constrained decoding — they own the decoder
+
+| Repo | Models / backends | Why this mechanism |
+|---|---|---|
+| [1rgs/jsonformer](https://github.com/1rgs/jsonformer) | single (local HuggingFace transformers models only; needs raw logits access) | Drives decoding itself, so it needs raw logits — which is why it is local-HF-only. Braces, quotes and keys are emitted by the driver and only values are sampled, making invalid JSON structurally impossible. |
+| [eth-sri/lmql](https://github.com/eth-sri/lmql) | OpenAI, Azure OpenAI, HuggingFace Transformers, llama.cpp, Replicate | A query language needs to enforce arbitrary constraints (types, regex, stop conditions, set membership), not just JSON, so it compiles them to eager token masks. Logits access also gives it `distribution` for P(value). |
+| [mlc-ai/xgrammar](https://github.com/mlc-ai/xgrammar) | HF transformers, vLLM, SGLang, TensorRT-LLM, MLC-LLM, OpenVINO GenAI, Modular MAX, WebLLM | Built as an engine for serving stacks, so latency is the product. Bitmask generation on CPU overlaps the GPU forward pass, making masking near-free — only possible inside the decode loop. |
+| [noamgat/lm-format-enforcer](https://github.com/noamgat/lm-format-enforcer) | HF transformers, vLLM, llama.cpp, ExLlamaV2, TensorRT-LLM, LangChain, LlamaIndex, Haystack | Deliberately permissive constrained decoding: it allows any token sequence that still parses, so the model keeps control of whitespace and field order. The stated goal is enforcement without the quality loss of rigid masking. |
+
+### Fine-tuned model
+
+| Repo | Models / backends | Why this mechanism |
+|---|---|---|
+| [docling-project/docling](https://github.com/docling-project/docling) | single (local HF transformers VLM: numind/NuExtract-2.0-2B default, … | Ships a fine-tuned VLM rather than constraining a general one. The Pydantic template is rendered into a filled example JSON and prompted, betting a model trained on the task beats constraining one that wasn't. |
+
+### Adaptive — mechanism swaps per backend
+
+| Repo | Models / backends | Why this mechanism |
+|---|---|---|
+| [567-labs/instructor](https://github.com/567-labs/instructor) | OpenAI, Anthropic, Google/Gemini, Vertex AI, Mistral, Cohere, Groq, Ollama, Bedrock, … | Supports 15+ providers, so no single mechanism is available everywhere — it adapts per provider and retries on validation failure. Patching the provider's own SDK keeps `create()` native, so the mechanism can change without the call site changing. |
+| [dottxt-ai/outlines](https://github.com/dottxt-ai/outlines) | transformers, llama.cpp, vLLM, SGLang, Ollama, MLX, LM Studio, TGI, OpenAI, Anthropic, … | Presents one `model(prompt, output_type)` call across 13 backends and silently swaps enforcement underneath: logit masking where it owns the decoder, provider `response_format` where it doesn't. |
+| [guardrails-ai/guardrails](https://github.com/guardrails-ai/guardrails) | LiteLLM (100+ models), OpenAI, Anthropic, HuggingFace pipelines/models, Manifest, … | Enforcement is per-field validators rather than one schema constraint, so on failure it reasks only the bad values instead of regenerating the whole object. |
+| [guidance-ai/guidance](https://github.com/guidance-ai/guidance) | Transformers, llama.cpp, OpenAI, Azure AI, ONNX Runtime GenAI, Mock | Interleaves grammar with prompt so tokens the grammar already determines are fast-forwarded, skipping forward passes. That is a speed argument, and it only pays off on backends it controls. |
+| [jndiogo/sibila](https://github.com/jndiogo/sibila) | local llama.cpp/GGUF, OpenAI, Anthropic, Mistral, Groq, Fireworks, Together | Ships its own JSON-Schema-to-GBNF converter so local models get real grammar constraints instead of prompt-coaxing, while API providers fall back to their native support. |
+| [Mirascope/mirascope](https://github.com/Mirascope/mirascope) | openai, anthropic, google, mlx/local, plus openai-compatible endpoints | Formatting mode is pluggable per call — strict, tool, json, or a custom parser — defaulting to strict. The library treats mechanism as a per-call decision, not a library-wide one. |
+| [pydantic/pydantic-ai](https://github.com/pydantic/pydantic-ai) | OpenAI, Anthropic, Google, Groq, Mistral, Cohere, DeepSeek, Bedrock, Ollama, HuggingFace, … | Exposes the choice rather than hiding it: three selectable output modes — tool call (default), native JSON schema, prompted — picked per type via marker classes, because provider support is uneven across 25+ backends. |
+| [ScrapeGraphAI/Scrapegraph-ai](https://github.com/ScrapeGraphAI/Scrapegraph-ai) | OpenAI, Azure, Groq, Gemini, Mistral, Bedrock, Ollama, NVIDIA (via LangChain) | Mechanism follows the backend: prompt instructions on OpenAI, native JSON-schema decoding on Ollama. Chunk-parallel-merge means partial failures matter less than throughput. |
+
+### Provider structured outputs
+
+| Repo | Models / backends | Why this mechanism |
+|---|---|---|
+| [google/langextract](https://github.com/google/langextract) | Gemini, OpenAI, Ollama, plus pluggable custom/community providers | Needs exact character offsets to fuzzy-align every extracted value back to the source, so it takes structured JSON from the provider and does the grounding work itself. |
+| [mishushakov/llm-scraper](https://github.com/mishushakov/llm-scraper) | OpenAI, Anthropic, Google, Groq, Ollama (any Vercel AI SDK provider) | A thin wrapper over the Vercel AI SDK, so it inherits whatever that SDK's structured-output support provides rather than implementing its own. |
+
+### Function / tool calling
+
+| Repo | Models / backends | Why this mechanism |
+|---|---|---|
+| [jackmpcollins/magentic](https://github.com/jackmpcollins/magentic) | OpenAI, Anthropic, LiteLLM (100+); OpenAI-compatible: Ollama, Gemini, xAI, Mistral, OpenRouter | There is no extract() call at all: the schema is the decorated stub's return annotation. Tool calling is what lets structured output stream while still typed. |
+| [PrefectHQ/marvin](https://github.com/PrefectHQ/marvin) | openai (default), anthropic, google, groq, mistral, bedrock, cohere, … | Every extraction is an agent task, so the result arrives as a forced end-turn tool call — reusing the agent loop's existing tool mechanism instead of a separate extraction path. |
+
+### Prompt and parse — no enforcement
+
+| Repo | Models / backends | Why this mechanism |
+|---|---|---|
+| [BoundaryML/baml](https://github.com/BoundaryML/baml) | OpenAI, OpenAI Responses, Anthropic, Google AI/Gemini, Vertex, AWS Bedrock, Azure, … | The only project here that rejects enforcement on principle. Schema-Aligned Parsing coerces malformed output into the schema, on the argument that a tolerant parser beats a constrained decoder and works on every provider including ones with no structured-output support. |
+| [eyurtsev/kor](https://github.com/eyurtsev/kor) | any LangChain BaseLanguageModel (OpenAI, Anthropic, local, etc.) | Predates provider structured outputs. Uses a swappable output encoder (CSV/JSON/XML) and returns errors beside partial data rather than retrying, treating extraction as best-effort. |
+| [katanaml/sparrow](https://github.com/katanaml/sparrow) | MLX, Ollama, vLLM, Hugging Face Spaces, local GPU, … | Schema is a JSON example with type tokens rather than a formal schema, so there is nothing to constrain against; validation is post-hoc and reported as a field. |
+| [microsoft/TypeChat](https://github.com/microsoft/TypeChat) | OpenAI, Azure OpenAI; any other via custom TypeChatLanguageModel | Schema is TypeScript source pasted into the prompt, and the TypeScript compiler validates the reply — reusing an existing type checker instead of building an enforcement layer. One repair turn fixes failures. |
+| [shcherbak-ai/contextgem](https://github.com/shcherbak-ai/contextgem) | LiteLLM-backed: OpenAI, Anthropic, Google, Azure, Ollama, LM Studio, etc. | You never write a prompt or schema — natural-language concept descriptions generate the prompts, references and justifications. Generated prompts can't be constrained, so parsing is the only option. |
+| [Zipstack/unstract](https://github.com/Zipstack/unstract) | OpenAI, Azure OpenAI, OpenAI-compatible, Anthropic, AWS Bedrock, Google Gemini, Ollama, … | Schema lives server-side in Prompt Studio and the API call ships only the document, so enforcement can't be a client-side decoder concern. |
+
+### No LLM (baseline)
+
+| Repo | Models / backends | Why this mechanism |
+|---|---|---|
+| [Unstructured-IO/unstructured](https://github.com/Unstructured-IO/unstructured) | none (no LLM provider in the OSS core) | No LLM and no schema input in the OSS core — deterministic per-format parsers plus a layout model emit a fixed element taxonomy. Included as the non-generative baseline. |
+
 ## The stack
 
 Layers are ordered by pipeline position, decoder outward. **These tables are hand-curated
