@@ -45,6 +45,12 @@ Claim only what you observed. "`make check` passes" is a claim. "The code is cor
 because nothing settles it — rewrite it until something does, or drop it. Do not write a claim
 you already know nothing can check and hope it passes.
 
+Never hedge a claim with a condition its `Verify:` command does not establish. "Passes once X"
+cannot be refuted, which means it cannot be checked either.
+
+Then tick each acceptance criterion in `spec.md` next to the claim that settles it, and put the
+user-visible effect in `CHANGELOG.md` under `## [Unreleased]`.
+
 ## Audit
 
 Run the `claim-auditor` subagent. It reproduces every claim from scratch and writes the
