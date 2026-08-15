@@ -26,7 +26,7 @@ retrying on a validation failure, and 12% mention tracking cost.
 | Unique repos found | 3,133 |
 | Passed relevance filter | 2,150 |
 | READMEs fetched and parsed | 3,027 of 3,133 |
-| Repos with no README at all | 103 (verified: every filename variant 404s) |
+| Repos with no usable README | 106 (103 verified as 404 on every filename variant) |
 | Distinct search queries | 106 |
 | Created 2025 or later | 1,712 of 2,150 (80%) |
 | Created in 2026 alone | 1,117 of 2,150 (52%) |
@@ -338,8 +338,8 @@ data rather than attributed to a query.
 
 Every repo was then independently validated by fetching its README from
 `raw.githubusercontent.com`, retrying transient failures across twelve filename variants:
-3,027 of 3,133 returned content, and the remaining 103 were confirmed to 404 on every
-variant. Star counts were spot-checked against fresh API queries and matched exactly.
+3,027 of 3,133 returned content; of the remaining 106, 103 were confirmed to 404 on every
+variant and 3 returned only whitespace. Star counts were spot-checked against fresh API queries and matched exactly.
 
 Reproduce from `data/corpus.csv` (all 3,133, including the raw `signals` and `queries`
 columns) and `data/shortlist.csv` (the 2,150 relevant). The hand-labelled accuracy sample
