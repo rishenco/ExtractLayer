@@ -14,6 +14,9 @@ Format: one line, imperative, with the change that taught it.
   intent traceable, not enforced. The non-forgeable gate is the pull request review on GitHub,
   so branch protection requiring a human approval is what actually holds — added while
   bootstrapping the loop.
+- Write claims after the code is committed, not before. `el_trailer_exempt` never exempts a
+  file with uncommitted changes, so a ledger written on a dirty tree makes claims about a state
+  no gate can reach — found when the auditor refuted the first ledger written here.
 - `10-comments.sh` matches per line, so a `#` or a URL inside a heredoc, a Go raw string, or a
   Python triple-quoted string reads as a comment and fails the gate. Move comment linting to
   each workspace linter, which parses instead of guessing, as soon as a stack lands — found by

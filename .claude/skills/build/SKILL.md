@@ -28,18 +28,38 @@ somewhere nobody chose.
 When a step turns out to need something not in the plan, that is a finding, not a licence.
 Small and inside the plan's intent: do it and note it. Anything else: stop and ask.
 
-## Verify
+## Claim
 
-- `make check` passes.
-- Every acceptance criterion in `spec.md` is ticked, each next to the thing that proves it.
-- `CHANGELOG.md` has the user-visible effect under `## [Unreleased]`.
+Write `work/<slug>/claims.md`, one block per claim, with a claim for every acceptance criterion
+in the spec and one for `make check`:
+
+```
+## C1
+Claim: a single sentence that is true or false
+Evidence: what you observed, as command output or path:line
+Verify: the exact command that settles it
+Verdict:
+```
+
+Claim only what you observed. "`make check` passes" is a claim. "The code is correct" is not,
+because nothing settles it — rewrite it until something does, or drop it. Do not write a claim
+you already know nothing can check and hope it passes.
+
+## Audit
+
+Run the `claim-auditor` subagent. It reproduces every claim from scratch and writes the
+verdicts. It is not reviewing your code.
+
+Do not argue with it. A claim it could not reproduce is withdrawn or made true — never
+explained away. `75-claims.sh` fails while any verdict is `UNSUPPORTED`, `FALSE`, or missing.
 
 ## Review
 
-Run the `adversarial-reviewer` subagent. Fix every blocking finding. For minor findings, fix or
-record why not — in the pull request, not in a comment in the code.
+Run the `adversarial-reviewer` subagent, separately, for the code itself: layer, shape,
+correctness. Fix every blocking finding. For minor findings, fix or record why not — in the
+pull request, not in a comment in the code.
 
-Re-run `make check` after fixes. Then run `/compound` on anything the review found that could
+Re-run `make check` after fixes. Then run `/compound` on anything either agent found that could
 recur elsewhere.
 
 ## Ship

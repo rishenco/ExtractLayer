@@ -24,6 +24,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   repo-level content gates stop scanning it once it does. Recorded in
   `docs/decisions/0003-repo-gates-are-a-floor.md`.
 - `docs/working.md`: how to run the development process efficiently.
+- Claim auditing, separate from code review: `/build` writes `work/<slug>/claims.md`, the
+  `claim-auditor` subagent reproduces each claim from scratch, and
+  `scripts/gates/75-claims.sh` fails on any verdict that is `UNSUPPORTED`, `FALSE` or missing.
+  Recorded in `docs/decisions/0004-claims-are-audited-separately-from-code.md`.
 
 ### Fixed
 

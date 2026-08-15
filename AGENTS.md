@@ -18,7 +18,13 @@ claimed. New behaviour ships with the check that proves it.
 
 ## The loop
 
-`/spec` → `/plan` → **human approves** → `/build` → adversarial review → PR → **human approves** → `/compound`
+`/spec` → `/plan` → **human approves** → `/build` → claim audit → code review → PR →
+**human approves** → `/compound`
+
+Claims about the work are separate from the work. `/build` writes `work/<slug>/claims.md`, the
+`claim-auditor` subagent reproduces each claim from scratch, and `scripts/gates/75-claims.sh`
+fails on any verdict that is `UNSUPPORTED`, `FALSE`, or missing. An agent's word is not
+evidence, including your own.
 
 `scripts/gates/70-approved-plan.sh` checks it: a branch that changes source needs a
 `work/<slug>/plan.md` marked `Status: Approved`. Setting that line yourself is forgery, not a

@@ -24,6 +24,11 @@ Plan: `work/<slug>/plan.md`
 
 <!-- What a reviewer would expect here and will not find, and why. -->
 
+## Claims
+
+<!-- Link work/<slug>/claims.md. Every verdict must be SUPPORTED. Say what the auditor
+     refuted or could not reproduce, and what changed as a result. -->
+
 ## Review findings
 
 <!-- Blocking findings from adversarial-reviewer and how each was resolved. Minor findings

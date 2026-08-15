@@ -54,6 +54,41 @@ el_workspaces() {
     | sort -u
 }
 
+EL_TRAILER='Skips-plan-gate:'
+
+el_trailer_exempt() {
+  if [ -n "${EL_EXEMPT_LIST:-}" ]; then
+    cat "$EL_EXEMPT_LIST"
+    return 0
+  fi
+  local relevant base dirty f c commits ok
+  relevant="$(cat)"
+  base="$(el_base_ref)" || return 0
+  dirty="$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null )"
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    printf '%s\n' "$dirty" | grep -qxF "$f" && continue
+    commits="$(git log --format='%H' "$base"..HEAD -- "$f" 2>/dev/null)"
+    [ -z "$commits" ] && continue
+    ok=1
+    while IFS= read -r c; do
+      git log -1 --format='%B' "$c" | grep -qE "^$EL_TRAILER[[:space:]]*\S" || { ok=0; break; }
+    done <<<"$commits"
+    [ "$ok" -eq 1 ] && printf '%s\n' "$f"
+  done <<<"$relevant"
+}
+
+el_blocked_after_trailer() {
+  local relevant exempt f
+  relevant="$(cat)"
+  exempt="$(printf '%s\n' "$relevant" | el_trailer_exempt)"
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    printf '%s\n' "$exempt" | grep -qxF "$f" && continue
+    printf '%s\n' "$f"
+  done <<<"$relevant"
+}
+
 el_linted_dirs() {
   local manifest dir
   while IFS= read -r manifest; do

@@ -14,13 +14,16 @@
    an agent without one is guessing, which is the failure mode this repo exists to prevent.
 7. Do not argue with an agent about quality. Make the standard executable and let `make check`
    be the referee — an agent will concede to a failing command and negotiate with an opinion.
-8. Run several approved plans in parallel in separate worktrees. The gate makes their output
+8. Read `work/<slug>/claims.md` before the diff. It is the list of things the agent asserts,
+   each with the command that settles it, and each already attacked by a second agent. A
+   sentence that survived an auditor is worth more than a paragraph of summary.
+9. Run several approved plans in parallel in separate worktrees. The gate makes their output
    comparable without you reading every diff.
-9. When a defect reaches you, run `/compound` before fixing it. Fixing costs one incident;
+10. When a defect reaches you, run `/compound` before fixing it. Fixing costs one incident;
    closing the hole costs one change and ends the class.
-10. When a gate annoys you, decide out loud: the code is wrong, or the gate is. Never weaken a
+11. When a gate annoys you, decide out loud: the code is wrong, or the gate is. Never weaken a
     gate quietly — that is how the standard erodes without anyone choosing it.
-11. Let the floor recede. Every real linter you configure retires a hand-written gate; see
+12. Let the floor recede. Every real linter you configure retires a hand-written gate; see
     `docs/decisions/0003-repo-gates-are-a-floor.md`.
-12. Re-read `docs/vision.md` when a request feels wrong. Usually the vision is out of date
+13. Re-read `docs/vision.md` when a request feels wrong. Usually the vision is out of date
     rather than the request, and updating it is the higher-leverage fix.

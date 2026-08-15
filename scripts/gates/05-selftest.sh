@@ -192,6 +192,60 @@ EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
 changed "docs/architecture.md"
 EL_CHANGED_LIST="$WORK/changed" expect 70-approved-plan.sh 0 "docs-only change needs no plan"
 
+printf '' >"$WORK/exempt"
+
+changed "ui/src/thing.ts"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "source change with no claims ledger is caught"
+
+add_file work/cl/claims.md '## C1
+Claim: make check passes.
+Verify: make check
+Verdict: SUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 0 "a fully supported ledger passes"
+
+add_file work/cl2/claims.md '## C1
+Claim: make check passes.
+Verify: make check
+Verdict: FALSE'
+changed "ui/src/thing.ts" "$WORK/work/cl2/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "a refuted claim blocks"
+
+add_file work/cl3/claims.md '## C1
+Claim: make check passes.
+Verify: make check
+Verdict: UNSUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl3/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "a claim nobody could reproduce blocks"
+
+add_file work/cl4/claims.md '## C1
+Claim: make check passes.
+Verify: make check
+Verdict:
+
+## C2
+Claim: the parser handles empty input.
+Verify: npm test -- parser
+Verdict: SUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl4/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "an unaudited claim blocks even when the others passed"
+
+add_file work/cl5/claims.md '# Claims
+
+Everything works.'
+changed "ui/src/thing.ts" "$WORK/work/cl5/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "prose with no claim blocks"
+
+changed "docs/architecture.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 0 "docs-only change needs no ledger"
+
 [ "$found" -eq 0 ] && exit 0
 echo
 echo "A gate that stopped firing reports success it cannot back."
