@@ -18,6 +18,10 @@
 - "Which mechanism, and why" section grouping the 24 projects by enforcement mechanism,
   with the models each drives and why it made that choice.
 
+- `research/data/client-leads.csv` — 369 projects that consume LLM extraction as a means
+  to an end (candidate users), separated from libraries and competitors.
+- `research/data/competitors.csv` — 53 projects that sell extraction itself.
+
 ### Fixed
 - README fetcher advanced its filename loop only on HTTP 404, so timeouts and 5xx cached
   an empty README. Empty READMEs cost 15 relevance points, meaning fetch failures were
