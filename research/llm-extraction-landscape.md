@@ -298,19 +298,26 @@ fails. The trustworthiness layer is missing almost everywhere.
 
 ### The head does what the tail doesn't
 
-Reading the docs of 24 of the landmark projects above and recording what each one actually
-supports gives a sharp contrast with the corpus-wide numbers. (These profiles come from
-project documentation and were not independently re-verified — treat them as indicative.)
+Reading the docs and source of 24 of the landmark projects above and recording what each
+one actually supports gives a sharp contrast with the corpus-wide numbers. Each profile was
+then checked by an independent pass instructed to refute its two central claims — the
+literal call signature and the enforcement mechanism — against primary sources. None of the
+24 was overturned.
 
 | | Landmark projects | Whole corpus |
 |---|---|---|
-| Retry on validation failure | 11 of 24 | 7% |
+| Retry on validation failure | 9 of 24 | 7% |
 | Source grounding | 5 of 24 | 9% |
 
-Retries are near-universal in the serious libraries — instructor, pydantic-ai, guardrails,
-marvin, magentic, mirascope, TypeChat and contextgem all re-ask on a validation failure —
-and essentially absent everywhere else. The capability exists; it just isn't reaching the
-people rebuilding this by hand.
+Nine of the twenty-four re-ask on a validation failure — instructor, pydantic-ai,
+guardrails, marvin, magentic, mirascope, TypeChat, contextgem and jsonformer — against 7%
+of the corpus. The capability exists; it just isn't reaching the people rebuilding this by
+hand.
+
+Enforcement across the 24 is more varied than the discourse suggests: 8 use a mix that
+adapts to the backend, 6 prompt-and-parse, 4 constrained decoding, 2 provider structured
+outputs, 2 function calling, 1 a fine-tuned model. There is no settled answer even at the
+top of this space.
 
 Grounding splits by tier rather than by quality. The document tools carry it because they
 must — unstructured, unstract and sparrow all trace values back to a page or region — while
@@ -343,7 +350,8 @@ variant and 3 returned only whitespace. Star counts were spot-checked against fr
 
 Reproduce from `data/corpus.csv` (all 3,133, including the raw `signals` and `queries`
 columns) and `data/shortlist.csv` (the 2,150 relevant). The hand-labelled accuracy sample
-is in `data/layer-accuracy-sample.csv`.
+is in `data/layer-accuracy-sample.csv`, and the 24 verified landmark profiles behind the
+head-vs-tail comparison are in `data/landmark-profiles.csv`.
 
 ## Limits
 

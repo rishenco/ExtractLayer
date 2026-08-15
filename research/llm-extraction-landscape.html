@@ -631,13 +631,16 @@ resume = b.ExtractResume(resume_text)</code></pre>
 
   <div class="gap-note">
     <div class="h">The head does what the tail doesn&rsquo;t</div>
-    <p>Reading the docs of 24 landmark projects and recording what each supports:
-    <strong>11 of 24 retry on validation failure</strong>, against 7% corpus-wide;
-    <strong>5 of 24 ground fields to source</strong>, against 9%. Retries are near-universal
-    in the serious libraries — instructor, pydantic-ai, guardrails, marvin, magentic,
-    mirascope, TypeChat and contextgem all re-ask on failure — and essentially absent
-    everywhere else. The capability exists; it isn&rsquo;t reaching the people rebuilding
-    this by hand.</p>
+    <p>Reading the docs and source of 24 landmark projects, then checking each profile with
+    an independent pass instructed to refute its central claims (none of the 24 was
+    overturned): <strong>9 of 24 retry on validation failure</strong>, against 7%
+    corpus-wide; <strong>5 of 24 ground fields to source</strong>, against 9%. Instructor,
+    pydantic-ai, guardrails, marvin, magentic, mirascope, TypeChat, contextgem and
+    jsonformer all re-ask on failure — and essentially nothing else does. The capability
+    exists; it isn&rsquo;t reaching the people rebuilding this by hand.</p>
+    <p style="margin-top:14px">Enforcement across the 24 is more varied than the discourse
+    suggests: 8 use a mix that adapts to the backend, 6 prompt-and-parse, 4 constrained
+    decoding, 2 provider structured outputs, 2 function calling, 1 a fine-tuned model.</p>
   </div>
 
   <p>Grounding splits by tier rather than by quality. Document tools carry it because they
