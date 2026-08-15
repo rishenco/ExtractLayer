@@ -1,0 +1,31 @@
+n,full_name,assigned_layer,verdict,in_scope,reviewer_note,description
+1,arthrod/clause-extract,L4-vertical-app,correct,yes,,Clause-level extraction from legal contracts using NER and structured prompting.
+2,AreenDeshpande/AI-Interviewer,L4-vertical-app,correct,yes,,AssessAI is a cutting-edge platform designed to streamline and automate the technical interview process for re
+3,rjmurphy777/GH-PR-Comment-Formatter,unclassified,correct,yes,,Fetches pull requests using the gh CLI and parses them into format suitable for LLM consumption
+4,gruecke2/ai-recipe-app,L4-tutorial,correct,yes,,A quick demo of wrapping a LLM and parsing the reply into a UI
+5,RNA4219/insight-agent,L2-primitive,wrong,yes,"papers vertical, not a general primitive","A structured insight extraction engine that turns papers and technical documents into claims, assumptions, lim"
+6,Harish2859/Llama-3.1-JSON-Specialist,unclassified,wrong,yes,fine-tuned extraction model,High-precision LLM for structured data extraction. Uses dual-phase SFT and DPO to transform unstructured text 
+7,BlkSword/CTX-Audit,unclassified,wrong,yes,"security tool, vertical app","Code security analysis built for LLM collaboration. Traces complete data-flow paths from input to sink, output"
+8,hiiyogesh/EncyclopediaRAGChatbot,L3-ingestion,correct,yes,,AI assistant that lets you upload PDF or JSON documents and ask questions about them. All language model infer
+9,fabiomatricardi/NuEtract1.5-streamlit,L4-tutorial,correct,yes,,simple use of LLM extracting structured data from plain text
+10,dyang108/fieldly,L2-primitive,correct,yes,,LLM-based schema extraction for unstructured input datasets
+11,zenoaihq/openinstruct,L2-primitive,correct,yes,,Instructor + token optimization. Extract structured data from LLMs with automatic Pydantic validation and 30-7
+12,HimashaHerath/webextract,L3-web,correct,yes,,AI-powered web content extraction — turn any website into structured JSON using LLMs and LangChain
+13,KR-0000/Clinical-Decision-Support-System-Prototype,L4-vertical-app,correct,yes,,"AI-powered clinical decision support prototype using FastAPI, LLMs, and structured medical information extract"
+14,haoxiangsnr/llm-tse,L4-vertical-app,wrong,no,speech separation - not data extraction,Typing to Listen at the Cocktail Party: Text-Guided Target Speaker Extraction (LLM-TSE)
+15,ZobayerAkib/AI-Invoice-Analyzer,L2-primitive,wrong,yes,"invoice vertical, not a primitive",An AI-powered invoice and receipt analyzer that extracts structured invoice data from images (JPG/PNG) and PDF
+16,robogg133/goon,L2-primitive,wrong,no,serialization format - no LLM,Goon is a Go library that implements encoding and decoding for Token‑Oriented Object Notation (TOON). TOON is 
+17,clifton/rstructor,L2-primitive,correct,yes,,"Pydantic + Instructor for Rust: extract structured, validated data from LLMs (OpenAI GPT, Anthropic Claude, Ge"
+18,arpan-pramanik/Speakease-FullStack-Project,L4-tutorial,wrong,yes,"is an app, not a tutorial","AI-native language learning platform built on a MERN stack with schema-normalized MongoDB models, stateless JW"
+19,gerrielxxvii307/allan-mcp-memory-code,L4-vertical-app,correct,yes,,Store persistent knowledge graphs for AI coding assistants using a local Docker setup with hybrid search and e
+20,anusarati/json-schema-builder,L2-primitive,correct,yes,,"    A powerful, visual GUI for developers to create and manage JSON Schemas, with first-class support for Open"
+21,MaitreyaM/WEB-SCRAPING-MCP,L3-web,correct,yes,,"MCP Server leveraging crawl4ai for web scraping and LLM-based content extraction (Markdown, text snippets, sma"
+22,mansimengde17/Multi-Modal-Document-Processor-with-OCR-LLM-Extraction-and-Validation,L3-ingestion,correct,yes,,"An end-to-end document processing pipeline that accepts any document format (PDF, image, scan), performs OCR t"
+23,mabdullah4800-ai/invoice-ocr-extractor,L3-ingestion,wrong,yes,invoice vertical,"Reads invoice PDFs with a vision LLM, extracts the line items into structured rows, validates the totals, and "
+24,Monarcamich/What-can-i-cook,L4-vertical-app,correct,yes,,A Python + Streamlit application for managing your pantry and discovering what recipes you can cook with avail
+25,hitz-zentroa/GoLLIE,unclassified,wrong,yes,research model,Guideline following Large Language Model for Information Extraction
+26,saida-d/ai-multi-model,unclassified,wrong,yes,finance vertical,Multiple LLMs to analyze a company's financial profile. It inputs a company name and processes it through spec
+27,bassrehab/ISO8583-Simulator,L2-primitive,wrong,no,payments protocol simulator - no LLM,"Modern ISO 8583 simulator with CLI, Python SDK, and interactive notebooks. Parse/build/validate messages at 18"
+28,shanakasp/Invoice-extractor-for-accounting-,L3-ingestion,wrong,yes,invoice vertical,"A Python tool that extracts text from PDFs and images (invoices, receipts, financial documents) using PyMuPDF "
+29,brightdata/real-estate-ai-agent,L3-web,correct,yes,,"Intelligent Python system that extracts real estate property data as structured JSON using AI agents, Nebius Q"
+30,liu00222/LLM-Based-Personal-Profile-Extraction,L5-research,correct,yes,,"This repository contains the code for our USENIX Security'25 paper ""Evaluating LLM-based Personal Information "

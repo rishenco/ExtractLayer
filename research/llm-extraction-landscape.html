@@ -1,0 +1,702 @@
+<title>The Extraction Layer</title>
+<style>
+  :root {
+    --paper: #F6F7F9;
+    --surface: #FFFFFF;
+    --surface-2: #EDEFF3;
+    --ink: #12171F;
+    --ink-2: #3D4654;
+    --ink-3: #6B7688;
+    --rule: #DADEE5;
+    --rule-2: #C3C9D4;
+    --accent: #0B6E78;
+    --accent-soft: #E2F0F1;
+    --clay: #A84A24;
+    --clay-soft: #F6E9E2;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --measure: 70ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0E1319;
+      --surface: #161C24;
+      --surface-2: #1D242E;
+      --ink: #E8ECF2;
+      --ink-2: #B4BECC;
+      --ink-3: #808C9E;
+      --rule: #262F3B;
+      --rule-2: #38434F;
+      --accent: #4FBFC8;
+      --accent-soft: #10333A;
+      --clay: #E08B62;
+      --clay-soft: #33211A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0E1319;
+    --surface: #161C24;
+    --surface-2: #1D242E;
+    --ink: #E8ECF2;
+    --ink-2: #B4BECC;
+    --ink-3: #808C9E;
+    --rule: #262F3B;
+    --rule-2: #38434F;
+    --accent: #4FBFC8;
+    --accent-soft: #10333A;
+    --clay: #E08B62;
+    --clay-soft: #33211A;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px 96px; }
+  .col { max-width: var(--measure); }
+
+  /* ---- masthead ---- */
+  header.top {
+    border-bottom: 1px solid var(--rule);
+    padding: 72px 0 40px;
+    margin-bottom: 48px;
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 20px;
+  }
+  h1 {
+    font-family: var(--mono);
+    font-size: clamp(30px, 4.6vw, 50px);
+    line-height: 1.08;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 22px;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+  h1 .sig {
+    display: block;
+    color: var(--accent);
+    font-size: clamp(15px, 2vw, 21px);
+    font-weight: 500;
+    letter-spacing: 0;
+    margin-top: 16px;
+  }
+  .standfirst {
+    font-size: 20px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .byline {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-top: 28px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---- sections ---- */
+  section { margin-bottom: 64px; }
+  h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 0 0 26px;
+    padding-bottom: 11px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+  }
+  h2 span.n { color: var(--ink-3); font-weight: 500; }
+  h3 {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 40px 0 12px;
+    color: var(--ink);
+  }
+  p { margin: 0 0 18px; max-width: var(--measure); }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  strong { font-weight: 650; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    padding: 0.12em 0.36em;
+    border-radius: 3px;
+  }
+
+  /* ---- lede callout ---- */
+  .lede {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 26px 30px;
+    margin-bottom: 34px;
+    max-width: var(--measure);
+  }
+  .lede p:last-child { margin-bottom: 0; }
+
+  /* ---- stat tiles ---- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-bottom: 30px;
+  }
+  .tile { background: var(--surface); padding: 20px 18px; }
+  .tile .v {
+    font-family: var(--mono);
+    font-size: 27px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    display: block;
+    line-height: 1.1;
+  }
+  .tile .k {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 8px;
+    display: block;
+    line-height: 1.4;
+  }
+
+  /* ---- tables ---- */
+  .tbl { overflow-x: auto; margin: 0 0 26px; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.repo { font-family: var(--mono); font-size: 13.5px; white-space: nowrap; }
+  td.mark { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+
+  /* ---- bar in table ---- */
+  .bar { display: block; height: 4px; background: var(--accent); border-radius: 1px; min-width: 2px; }
+  .bar.clay { background: var(--clay); }
+  td.barcell { width: 26%; padding-top: 17px; }
+
+  /* ---- layer stack ---- */
+  .layer { border: 1px solid var(--rule); background: var(--surface); margin-bottom: 14px; }
+  .layer > summary {
+    cursor: pointer;
+    padding: 15px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 14px;
+    list-style: none;
+  }
+  .layer > summary::-webkit-details-marker { display: none; }
+  .layer > summary::after {
+    content: "+";
+    margin-left: auto;
+    color: var(--ink-3);
+    font-size: 16px;
+  }
+  .layer[open] > summary::after { content: "\2212"; }
+  .layer .tag {
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    flex: none;
+  }
+  .layer .nm { font-weight: 600; }
+  .layer .ct { color: var(--ink-3); font-size: 12.5px; }
+  .layer .body { padding: 4px 20px 18px; border-top: 1px solid var(--rule); }
+  .layer .body p { font-size: 15px; margin-top: 14px; }
+
+  /* ---- code ---- */
+  .shape { margin: 0 0 26px; max-width: var(--measure); }
+  .shape .lbl {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 9px;
+  }
+  .shape p { font-size: 15.5px; margin-bottom: 12px; color: var(--ink-2); }
+  pre {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--rule-2);
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* ---- gap emphasis ---- */
+  .gap-note {
+    background: var(--clay-soft);
+    border: 1px solid var(--clay);
+    padding: 22px 26px;
+    max-width: var(--measure);
+    margin: 6px 0 26px;
+  }
+  .gap-note p { margin: 0; }
+  .gap-note .h {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--clay);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  ul.notes { max-width: var(--measure); padding-left: 0; list-style: none; margin: 0; }
+  ul.notes li {
+    padding: 14px 0 14px 0;
+    border-top: 1px solid var(--rule);
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  ul.notes li b { color: var(--ink); font-weight: 650; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 24px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-3);
+    line-height: 1.7;
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .wrap { padding: 0 18px 64px; }
+    header.top { padding-top: 44px; }
+  }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="kicker">GitHub survey / August 2026</p>
+  <h1>The Extraction Layer
+    <span class="sig">llm(system, raw_text) &rarr; structured_data</span>
+  </h1>
+  <p class="standfirst">3,133 repositories searched. The primitive is commoditised; the
+  gap has moved to everything around the call.</p>
+  <p class="byline">106 queries &middot; 3,027 READMEs fetched and parsed &middot; 2,150 repos passed relevance</p>
+</header>
+
+<section>
+  <h2>The short version</h2>
+  <div class="lede">
+    <p>The <em>primitive</em> is finished — three lines against a provider API, wrapped by a
+    dozen mature libraries.</p>
+    <p>The <em>practice</em> has not caught up. Of the 2,150 repos here that actually do LLM
+    extraction, <strong>3.0% show any named extraction library</strong> — no instructor, no
+    outlines, no BAML, no LangChain structured output. The long tail calls provider APIs
+    directly and parses by hand. The most-used package after the providers themselves is
+    <code>json_repair</code>, which exists to patch malformed model output.</p>
+    <p>So: <strong>solved at the head, re-implemented from scratch almost everywhere
+    else</strong> — and largely without the parts that make extraction trustworthy. Median
+    star count is 2.</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><span class="v">3,133</span><span class="k">Repos found</span></div>
+    <div class="tile"><span class="v">2,150</span><span class="k">Relevant</span></div>
+    <div class="tile"><span class="v">72%</span><span class="k">Under 10 stars</span></div>
+    <div class="tile"><span class="v">52%</span><span class="k">Created in 2026 alone</span></div>
+    <div class="tile"><span class="v">3.0%</span><span class="k">Use any named library</span></div>
+  </div>
+
+  <p>The space is young and rebuilt continuously: 1,712 of the relevant repos were created in
+  2025 or later and 1,117 (52%) in 2026 alone. Only 26 are archived. Python holds 60%
+  (1,291 repos), TypeScript 225, Jupyter 175, JavaScript 95, Rust 56, Go 52, HTML 48; 101
+  report no language.</p>
+
+  <p>728 repos (34%) mention Pydantic, but only <strong>98 (5%) visibly author a
+  <code>class X(BaseModel)</code></strong> — the rest inherit it transitively through
+  FastAPI, LangChain or LlamaIndex. Zod appears in 114. Read these as ecosystem presence,
+  not authorship.</p>
+  <p>Providers: OpenAI 1,135, Anthropic 719, Google 575, LiteLLM/OpenRouter 195. For local
+  inference the loose signal gives 872, but counting only real local runtimes — Ollama,
+  llama.cpp, vLLM, LM Studio, SGLang — gives <strong>548 (25%)</strong>.</p>
+</section>
+
+<section>
+  <h2>How the call is actually written <span class="n">6 shapes</span></h2>
+  <p>Six distinct API shapes have emerged for the same operation. Every snippet is copied
+  from that project's own README.</p>
+
+  <div class="shape">
+    <div class="lbl">01 &middot; Patch the provider SDK</div>
+    <p>The call site stays familiar; one extra argument carries the schema. This is
+    <code>instructor</code>, the shape most others are measured against.</p>
+<pre><code>client = instructor.from_provider("openai/gpt-4o-mini")
+user = client.chat.completions.create(
+    response_model=User,
+    messages=[{"role": "user", "content": "John is 25 years old"}],
+)</code></pre>
+  </div>
+
+  <div class="shape">
+    <div class="lbl">02 &middot; Schema-first method</div>
+    <p>The literal <code>llm(schema, text)</code> signature. <code>sibila</code>:</p>
+<pre><code>model = Models.create("llamacpp:openchat")
+model.extract(Info, "Who was the first man in the moon?")</code></pre>
+  </div>
+
+  <div class="shape">
+    <div class="lbl">03 &middot; Type-first function</div>
+    <p>No schema class at all — the return type <em>is</em> the schema.
+    <code>marvin</code>:</p>
+<pre><code>result = marvin.extract("i found $30 on the ground and bought 5 bagels for $10",
+                        int, instructions="only USD")</code></pre>
+  </div>
+
+  <div class="shape">
+    <div class="lbl">04 &middot; Examples instead of a schema</div>
+    <p>Few-shot examples define the shape, and every extracted field is grounded back to a
+    source span. <code>langextract</code>:</p>
+<pre><code>result = lx.extract(text_or_documents=input_text, prompt_description=prompt,
+                    examples=examples, model_id="gemini-3.5-flash")</code></pre>
+  </div>
+
+  <div class="shape">
+    <div class="lbl">05 &middot; Declarative document model</div>
+    <p>You attach what you want to a document rather than calling an extractor.
+    <code>contextgem</code>:</p>
+<pre><code>aspect = Aspect(name="Term and termination",
+                description="Clauses on contract term and termination")
+concept = BooleanConcept(name="NDA check", description="Is the contract an NDA?")
+document.add_aspects([aspect]); document.add_concepts([concept])</code></pre>
+  </div>
+
+  <div class="shape">
+    <div class="lbl">06 &middot; Schema as a separate language</div>
+    <p>The schema lives in its own DSL file and compiles to a typed client.
+    <code>BAML</code>:</p>
+<pre><code>from baml_client import b
+resume = b.ExtractResume(resume_text)</code></pre>
+  </div>
+
+  <p>The trend across the head of the corpus runs away from prompt strings and toward a
+  typed function boundary. BAML goes furthest by moving the prompt out of the host language
+  entirely — the only approach here that makes the prompt diffable and testable on its own.</p>
+</section>
+
+<section>
+  <h2>What enforces the structure</h2>
+  <p>READMEs rarely show the mechanism — 1,675 of 2,150 repos (78%) describe the capability
+  without showing the call. Adoption is better measured across all of GitHub by code search.
+  Counts are <em>files</em>, include forks and vendored copies, and should be read as
+  relative magnitudes.</p>
+
+  <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>Mechanism</th><th>Marker searched</th><th class="num">Files (approx.)</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Function / tool calling</td><td class="mark">tool_choice</td><td class="num">230,400</td><td class="barcell"><span class="bar" style="width:100%"></span></td></tr>
+        <tr><td>JSON mode (legacy)</td><td class="mark">response_format + json_object</td><td class="num">195,584</td><td class="barcell"><span class="bar" style="width:85%"></span></td></tr>
+        <tr><td>Provider structured outputs</td><td class="mark">response_format + json_schema</td><td class="num">86,289</td><td class="barcell"><span class="bar" style="width:37%"></span></td></tr>
+        <tr><td>LangChain</td><td class="mark">with_structured_output</td><td class="num">72,448</td><td class="barcell"><span class="bar" style="width:31%"></span></td></tr>
+        <tr><td>PydanticAI</td><td class="mark">from pydantic_ai</td><td class="num">37,888</td><td class="barcell"><span class="bar" style="width:16%"></span></td></tr>
+        <tr><td>Structured outputs (TS)</td><td class="mark">response_format + json_schema</td><td class="num">26,720</td><td class="barcell"><span class="bar" style="width:12%"></span></td></tr>
+        <tr><td>Post-hoc repair</td><td class="mark">json_repair</td><td class="num">16,992</td><td class="barcell"><span class="bar clay" style="width:7.4%"></span></td></tr>
+        <tr><td>Instructor</td><td class="mark">import instructor + response_model</td><td class="num">6,976</td><td class="barcell"><span class="bar" style="width:3%"></span></td></tr>
+        <tr><td>XGrammar</td><td class="mark">xgrammar</td><td class="num">6,704</td><td class="barcell"><span class="bar" style="width:2.9%"></span></td></tr>
+        <tr><td>BAML</td><td class="mark">baml_client</td><td class="num">6,320</td><td class="barcell"><span class="bar" style="width:2.7%"></span></td></tr>
+        <tr><td>OpenAI structured (TS helper)</td><td class="mark">zodResponseFormat</td><td class="num">4,960</td><td class="barcell"><span class="bar" style="width:2.2%"></span></td></tr>
+        <tr><td>Outlines</td><td class="mark">from outlines</td><td class="num">2,456</td><td class="barcell"><span class="bar" style="width:1.1%"></span></td></tr>
+        <tr><td>Marvin</td><td class="mark">import marvin</td><td class="num">2,296</td><td class="barcell"><span class="bar" style="width:1%"></span></td></tr>
+        <tr><td>Mirascope</td><td class="mark">from mirascope</td><td class="num">1,632</td><td class="barcell"><span class="bar" style="width:0.7%"></span></td></tr>
+        <tr><td>LangExtract</td><td class="mark">import langextract</td><td class="num">1,042</td><td class="barcell"><span class="bar" style="width:0.5%"></span></td></tr>
+        <tr><td>LM Format Enforcer</td><td class="mark">lm_format_enforcer</td><td class="num">1,040</td><td class="barcell"><span class="bar" style="width:0.5%"></span></td></tr>
+        <tr><td>Jsonformer</td><td class="mark">jsonformer</td><td class="num">551</td><td class="barcell"><span class="bar" style="width:0.3%"></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Read these as magnitudes only. GitHub returns approximate totals — nine of the
+  seventeen are exact multiples of 32 — and the markers are not equivalent:
+  <code>tool_choice</code> appears in every agent framework, mostly for tool dispatch rather
+  than extraction, while Outlines and XGrammar are undercounted because they are consumed
+  mostly <em>through</em> vLLM and SGLang's <code>guided_json</code>, which this table never
+  searches. What both tables jointly support is narrower: provider-side enforcement is the
+  default path, and dedicated extraction libraries are a minority practice at both scales.
+  <code>json_repair</code> at 17k files measures how often the structured path is
+  <em>not</em> trusted.</p>
+</section>
+
+<section>
+  <h2>The stack <span class="n">L0 &ndash; L5</span></h2>
+  <p>Layers are ordered by pipeline position, decoder outward. <strong>These tables are
+  hand-curated landmarks, not a sample of the corpus</strong> — nine entries score below the
+  automated relevance cut, and for 15 of 38 the layer shown overrides the classifier's own
+  label. The percentages elsewhere describe the 2,150-repo relevant set, a different
+  population. Two classifier layers are omitted below and shouldn't be forgotten:
+  <code>L0-runtime</code> (83 repos — vLLM, SGLang, the tier through which most constrained
+  decoding is actually consumed) and <code>unclassified</code> (347, 16%).</p>
+
+  <details class="layer">
+    <summary><span class="tag">L1</span><span class="nm">Enforcement engines</span><span class="ct">constrain the decoder</span></summary>
+    <div class="body">
+      <p>Make invalid tokens unemittable. Mostly consumed through a serving stack rather
+      than called directly.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Repo</th><th class="num">Stars</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="repo"><a href="https://github.com/guidance-ai/guidance">guidance-ai/guidance</a></td><td class="num">21,713</td><td>Control language for generation</td></tr>
+          <tr><td class="repo"><a href="https://github.com/dottxt-ai/outlines">dottxt-ai/outlines</a></td><td class="num">15,617</td><td>Regex / JSON-Schema guided</td></tr>
+          <tr><td class="repo"><a href="https://github.com/1rgs/jsonformer">1rgs/jsonformer</a></td><td class="num">4,934</td><td>Fills schema fields token by token</td></tr>
+          <tr><td class="repo"><a href="https://github.com/eth-sri/lmql">eth-sri/lmql</a></td><td class="num">4,203</td><td>Constraint-guided query language</td></tr>
+          <tr><td class="repo"><a href="https://github.com/noamgat/lm-format-enforcer">noamgat/lm-format-enforcer</a></td><td class="num">2,028</td><td>Backend for vLLM and others</td></tr>
+          <tr><td class="repo"><a href="https://github.com/mlc-ai/xgrammar">mlc-ai/xgrammar</a></td><td class="num">1,818</td><td>Fast grammar engine, C++</td></tr>
+          <tr><td class="repo"><a href="https://github.com/structuredllm/syncode">structuredllm/syncode</a></td><td class="num">339</td><td>Grammar-based syntactical decoding</td></tr>
+          <tr><td class="repo"><a href="https://github.com/Dan-wanna-M/formatron">Dan-wanna-M/formatron</a></td><td class="num">237</td><td>Low-overhead format control</td></tr>
+          <tr><td class="repo"><a href="https://github.com/epfl-dlab/transformers-CFG">epfl-dlab/transformers-CFG</a></td><td class="num">140</td><td>CFG constraints for HF models</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <details class="layer" open>
+    <summary><span class="tag">L2</span><span class="nm">Extraction primitives</span><span class="ct">schema in, typed object out</span></summary>
+    <div class="body">
+      <p>The layer the question describes: validation, retries, and a typed boundary.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Repo</th><th class="num">Stars</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="repo"><a href="https://github.com/google/langextract">google/langextract</a></td><td class="num">38,378</td><td>Few-shot; grounds fields to source spans</td></tr>
+          <tr><td class="repo"><a href="https://github.com/stanfordnlp/dspy">stanfordnlp/dspy</a></td><td class="num">37,187</td><td>Typed signatures; optimises the prompt</td></tr>
+          <tr><td class="repo"><a href="https://github.com/pydantic/pydantic-ai">pydantic/pydantic-ai</a></td><td class="num">19,298</td><td>Typed outputs from the Pydantic team</td></tr>
+          <tr><td class="repo"><a href="https://github.com/567-labs/instructor">567-labs/instructor</a></td><td class="num">13,729</td><td>Reference implementation; patches the SDK</td></tr>
+          <tr><td class="repo"><a href="https://github.com/BoundaryML/baml">BoundaryML/baml</a></td><td class="num">9,004</td><td>Schema as a DSL, generates a typed client</td></tr>
+          <tr><td class="repo"><a href="https://github.com/microsoft/TypeChat">microsoft/TypeChat</a></td><td class="num">8,677</td><td>TypeScript types as the schema</td></tr>
+          <tr><td class="repo"><a href="https://github.com/guardrails-ai/guardrails">guardrails-ai/guardrails</a></td><td class="num">7,285</td><td>Validation and correction policies</td></tr>
+          <tr><td class="repo"><a href="https://github.com/PrefectHQ/marvin">PrefectHQ/marvin</a></td><td class="num">6,189</td><td><code>marvin.extract(text, type)</code></td></tr>
+          <tr><td class="repo"><a href="https://github.com/mangiucugna/json_repair">mangiucugna/json_repair</a></td><td class="num">5,070</td><td>The fallback everyone keeps</td></tr>
+          <tr><td class="repo"><a href="https://github.com/jackmpcollins/magentic">jackmpcollins/magentic</a></td><td class="num">2,413</td><td>LLM calls as decorated functions</td></tr>
+          <tr><td class="repo"><a href="https://github.com/shcherbak-ai/contextgem">shcherbak-ai/contextgem</a></td><td class="num">1,983</td><td>Declarative concepts; sentence-level references</td></tr>
+          <tr><td class="repo"><a href="https://github.com/eyurtsev/kor">eyurtsev/kor</a></td><td class="num">1,685</td><td>Early schema-first extraction</td></tr>
+          <tr><td class="repo"><a href="https://github.com/Mirascope/mirascope">Mirascope/mirascope</a></td><td class="num">1,521</td><td>Provider-agnostic typed calls</td></tr>
+          <tr><td class="repo"><a href="https://github.com/567-labs/instructor-js">567-labs/instructor-js</a></td><td class="num">802</td><td>Instructor for TypeScript</td></tr>
+          <tr><td class="repo"><a href="https://github.com/jndiogo/sibila">jndiogo/sibila</a></td><td class="num">55</td><td><code>model.extract(Schema, text)</code>, local-first</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <details class="layer">
+    <summary><span class="tag">L3</span><span class="nm">Ingestion &mdash; documents</span><span class="ct">bytes to text to structure</span></summary>
+    <div class="body">
+      <p>Crowded and well funded; the largest star counts in the whole corpus.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Repo</th><th class="num">Stars</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="repo"><a href="https://github.com/microsoft/markitdown">microsoft/markitdown</a></td><td class="num">173,793</td><td>Format conversion only &mdash; no extraction step</td></tr>
+          <tr><td class="repo"><a href="https://github.com/docling-project/docling">docling-project/docling</a></td><td class="num">64,773</td><td>Layout-aware conversion</td></tr>
+          <tr><td class="repo"><a href="https://github.com/run-llama/llama_index">run-llama/llama_index</a></td><td class="num">51,642</td><td>Document agents; LlamaExtract for schemas</td></tr>
+          <tr><td class="repo"><a href="https://github.com/datalab-to/marker">datalab-to/marker</a></td><td class="num">38,746</td><td>PDF to Markdown + JSON</td></tr>
+          <tr><td class="repo"><a href="https://github.com/Unstructured-IO/unstructured">Unstructured-IO/unstructured</a></td><td class="num">15,311</td><td>Long-standing preprocessing toolkit</td></tr>
+          <tr><td class="repo"><a href="https://github.com/getomni-ai/zerox">getomni-ai/zerox</a></td><td class="num">12,265</td><td>OCR via vision models</td></tr>
+          <tr><td class="repo"><a href="https://github.com/Zipstack/unstract">Zipstack/unstract</a></td><td class="num">7,140</td><td>Extraction platform with API deployment</td></tr>
+          <tr><td class="repo"><a href="https://github.com/katanaml/sparrow">katanaml/sparrow</a></td><td class="num">5,196</td><td>Agentic document workflows</td></tr>
+          <tr><td class="repo"><a href="https://github.com/NanoNets/docstrange">NanoNets/docstrange</a></td><td class="num">1,520</td><td>Any document to structured data</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <details class="layer">
+    <summary><span class="tag">L3</span><span class="nm">Ingestion &mdash; web</span><span class="ct">the same shape, HTML input</span></summary>
+    <div class="body">
+      <div class="tbl"><table>
+        <thead><tr><th>Repo</th><th class="num">Stars</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="repo"><a href="https://github.com/firecrawl/firecrawl">firecrawl/firecrawl</a></td><td class="num">167,436</td><td>Scrape / search API with schema extraction</td></tr>
+          <tr><td class="repo"><a href="https://github.com/unclecode/crawl4ai">unclecode/crawl4ai</a></td><td class="num">78,130</td><td>LLM-oriented crawler</td></tr>
+          <tr><td class="repo"><a href="https://github.com/ScrapeGraphAI/Scrapegraph-ai">ScrapeGraphAI/Scrapegraph-ai</a></td><td class="num">29,543</td><td>Graph-based scraping pipelines</td></tr>
+          <tr><td class="repo"><a href="https://github.com/mishushakov/llm-scraper">mishushakov/llm-scraper</a></td><td class="num">6,909</td><td>Webpage to typed object, Zod schemas</td></tr>
+          <tr><td class="repo"><a href="https://github.com/adbar/trafilatura">adbar/trafilatura</a></td><td class="num">6,634</td><td>Rule-based, no LLM &mdash; the pre-LLM baseline</td></tr>
+          <tr><td class="repo"><a href="https://github.com/lightfeed/extractor">lightfeed/extractor</a></td><td class="num">320</td><td>Robust web data extraction</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <details class="layer">
+    <summary><span class="tag">L4</span><span class="nm">Vertical applications</span><span class="ct">where the job-posting parser lives</span></summary>
+    <div class="body">
+      <p>At 509 repos the largest single layer (24% of the relevant set; 32% counting
+      tutorials), though not a majority &mdash; and the thinnest by substance. Domain is tagged
+      from description and tagline only — scoping it to README bodies inflated every
+      vertical by 25&ndash;50%, because general-purpose libraries like BAML and Mirascope use
+      "extract a resume" as their headline example.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Domain</th><th class="num">Repos</th><th>Comment</th></tr></thead>
+        <tbody>
+          <tr><td>Invoices / finance</td><td class="num">191</td><td>Densest vertical; invoice-to-JSON is the canonical demo</td></tr>
+          <tr><td>Jobs / recruiting</td><td class="num">160</td><td>Resume/ATS parsers outnumber job-posting parsers ~2:1</td></tr>
+          <tr><td>Research papers</td><td class="num">100</td><td>Often academic tooling</td></tr>
+          <tr><td>Medical / clinical</td><td class="num">93</td><td></td></tr>
+          <tr><td>Knowledge graphs</td><td class="num">80</td><td>Highest local-runtime share of any vertical (58%)</td></tr>
+          <tr><td>Legal</td><td class="num">35</td><td>Contract clause extraction; 56% local</td></tr>
+          <tr><td>E-commerce</td><td class="num">22</td><td></td></tr>
+          <tr><td>Logs / security</td><td class="num">17</td><td></td></tr>
+          <tr><td>News / media</td><td class="num">13</td><td></td></tr>
+          <tr><td>Real estate</td><td class="num">10</td><td></td></tr>
+          <tr><td>ID / forms</td><td class="num">8</td><td></td></tr>
+        </tbody>
+      </table></div>
+      <p>The two densest verticals are almost entirely hobby work. Across the 191 invoice
+      repos the median star count is 1 and only four clear 100 stars; across the 160
+      job/recruiting repos the median is 1 and exactly one clears 100. Nobody has
+      consolidated either vertical — either an opportunity, or a warning that per-vertical
+      extraction does not hold value on its own.</p>
+    </div>
+  </details>
+
+  <details class="layer">
+    <summary><span class="tag">L5</span><span class="nm">Research &amp; benchmarks</span><span class="ct">23 repos in the relevant set</span></summary>
+    <div class="body">
+      <p>Paper implementations, datasets, evaluation harnesses.
+      <a href="https://github.com/urchade/GLiNER">urchade/GLiNER</a> (3,537) is the notable
+      non-LLM alternative — a small dedicated NER model, far cheaper than a generative call.</p>
+    </div>
+  </details>
+</section>
+
+<section>
+  <h2>What almost nobody does</h2>
+  <p>Signal prevalence across the 2,150 relevant repos. These count <em>mentions</em> in
+  README and manifest text, so they are an upper bound on real capability — which makes the
+  small numbers the meaningful ones.</p>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Capability</th><th class="num">Repos</th><th class="num">Share</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>Any evaluation or accuracy language</td><td class="num">868</td><td class="num">40%</td><td class="barcell"><span class="bar" style="width:40%"></span></td></tr>
+        <tr><td>PDF handling</td><td class="num">850</td><td class="num">40%</td><td class="barcell"><span class="bar" style="width:40%"></span></td></tr>
+        <tr><td>Batch / concurrency</td><td class="num">755</td><td class="num">35%</td><td class="barcell"><span class="bar" style="width:35%"></span></td></tr>
+        <tr><td>OCR / vision</td><td class="num">583</td><td class="num">27%</td><td class="barcell"><span class="bar" style="width:27%"></span></td></tr>
+        <tr><td>Web scraping</td><td class="num">430</td><td class="num">20%</td><td class="barcell"><span class="bar" style="width:20%"></span></td></tr>
+        <tr><td>Cost or token tracking</td><td class="num">250</td><td class="num">12%</td><td class="barcell"><span class="bar clay" style="width:12%"></span></td></tr>
+        <tr><td>Human review / correction loop</td><td class="num">208</td><td class="num">10%</td><td class="barcell"><span class="bar clay" style="width:10%"></span></td></tr>
+        <tr><td>Source grounding / provenance</td><td class="num">198</td><td class="num">9%</td><td class="barcell"><span class="bar clay" style="width:9%"></span></td></tr>
+        <tr><td>Retry on validation failure</td><td class="num">161</td><td class="num">7%</td><td class="barcell"><span class="bar clay" style="width:7%"></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="gap-note">
+    <div class="h">The head does what the tail doesn&rsquo;t</div>
+    <p>Reading the docs of 24 landmark projects and recording what each supports:
+    <strong>11 of 24 retry on validation failure</strong>, against 7% corpus-wide;
+    <strong>5 of 24 ground fields to source</strong>, against 9%. Retries are near-universal
+    in the serious libraries — instructor, pydantic-ai, guardrails, marvin, magentic,
+    mirascope, TypeChat and contextgem all re-ask on failure — and essentially absent
+    everywhere else. The capability exists; it isn&rsquo;t reaching the people rebuilding
+    this by hand.</p>
+  </div>
+
+  <p>Grounding splits by tier rather than by quality. Document tools carry it because they
+  must — unstructured, unstract and sparrow all trace values back to a page or region —
+  while in the plain-text tier only
+  <a href="https://github.com/google/langextract">langextract</a> and
+  <a href="https://github.com/shcherbak-ai/contextgem">contextgem</a> do. For any extraction
+  a human must audit, that is the difference between a reviewable output and an
+  unfalsifiable one.</p>
+
+  <p>One design note worth recording: BAML, the most opinionated project in the set, does
+  <em>not</em> use constrained decoding or provider structured outputs. It generates freely
+  and parses with its own error-tolerant parser, on the argument that a good parser beats a
+  constrained decoder. That is a live disagreement at the top of this space, not a settled
+  question.</p>
+</section>
+
+<section>
+  <h2>Method &amp; limits</h2>
+  <p>GitHub repository search across 106 queries in four families: mechanism vocabulary,
+  extraction vocabulary, modality, and vertical. Star-sliced queries
+  (<code>stars:20..80</code>, <code>stars:81..400</code>) reached past the 1,000-result
+  ranking cap. 22 landmark projects that keyword search missed were backfilled by exact-name
+  lookup and are tagged <code>landmark</code> in the data rather than attributed to a query.
+  Every repo was then validated by fetching its README from
+  <code>raw.githubusercontent.com</code>, retrying transient failures across twelve filename
+  variants: 3,027 of 3,133 returned content, and the remaining 103 were confirmed to 404 on
+  every variant. Star counts were spot-checked against fresh API queries and matched
+  exactly.</p>
+
+  <ul class="notes">
+    <li><b>Everything except stars, dates and languages is a keyword measurement.</b>
+    Domain, capability, mechanism and layer are regex signals over README and manifest text
+    — they measure what a repo <i>says</i>, not what it does. Where a loose pattern inflated
+    a number, both figures are reported so the inflation stays visible:
+    mention-of-Pydantic 34% vs authored-<code>BaseModel</code> 5%; loose-local 41% vs
+    actual-local-runtime 25%.</li>
+    <li><b>Layer assignment is ~60% accurate.</b> Hand-labelling a fresh 30-repo sample
+    against the final classification gives 18/30; pooling the two held-out samples taken
+    after tuning gives 38/60 — call it 60% &plusmn; 9. Failures are not random: vertical
+    apps read as generic primitives, and demos read as products.</li>
+    <li><b>The relevance filter carries roughly 10% false positives.</b> Three of those
+    same 30 are not LLM data extraction at all — a text-guided <i>speech</i> separation
+    model, an ISO-8583 payments simulator, and a Go serialization library — each matching on
+    shared vocabulary.</li>
+    <li><b>Coverage is broad but not saturated.</b> 82% of repos were surfaced by exactly
+    one query. Keyword search has a systematic blind spot: an initial landmark check found
+    only 17 of 49 known projects, though roughly a third of those "misses" were stale
+    aliases of renamed repos (<code>instructor-ai</code> &rarr; <code>567-labs</code>,
+    <code>outlines-dev</code> &rarr; <code>dottxt-ai</code>, and four others) rather than
+    true gaps. After resolving renames and backfilling, 39 of 49 were present.</li>
+    <li><b>Not measured at all:</b> schema versioning, contributor counts, and whether any
+    project's extraction is actually accurate. No claim here rests on them.</li>
+  </ul>
+</section>
+
+<footer>
+  Corpus and per-repo classification published as CSV alongside this report.<br>
+  3,133 repositories &middot; 106 queries &middot; August 2026
+</footer>
+
+</div>
