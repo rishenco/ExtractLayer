@@ -56,6 +56,8 @@ What you argued against and what was decided. "None" is an answer.
   is not a criterion — rewrite it until it can be, or move it to Non-goals.
 - "Works correctly", "is performant", "handles errors gracefully" are not criteria.
 - Three vague criteria are worth less than one exact one.
+- A spec records decisions as requirements — "X, because Y", never a transcript of who said
+  what or when. **Objections** is the one section that keeps the argument itself.
 - Do not describe implementation. That is `/plan`.
 
 End by telling the human the spec is ready and what you need from them. Then `/plan <slug>`.

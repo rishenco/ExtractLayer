@@ -1,1 +1,10 @@
 .local
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.import_linter_cache/
+.hypothesis/
+node_modules/
+.venv/

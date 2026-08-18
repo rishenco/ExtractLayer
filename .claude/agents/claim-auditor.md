@@ -57,6 +57,9 @@ Write one per claim, back into `claims.md`:
 Each verdict carries the command you ran and its actual result, in one line. For `FALSE`, state
 what is true instead.
 
+Verdicts are the only prose you add. Do not preface or annotate the ledger with how the audit
+went — the blocks are the whole record.
+
 ## What you must not do
 
 - Do not fix anything. You audit; someone else repairs.

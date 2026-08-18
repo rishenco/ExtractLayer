@@ -25,7 +25,9 @@ faster to write.
 3. **A hook** in `.claude/hooks/`. The mistake happens during work and is worth catching at the
    moment it is made rather than at the end.
 4. **A line in `docs/lessons.md`.** Only when the first three genuinely cannot see it.
-   Imperative, one line, naming the change that taught it.
+   Imperative, one line, naming the change that taught it. Lessons is the one committed doc
+   whose format names its finding; a relic phrase that reaches review anywhere else extends
+   the list in `scripts/gates/35-narration.sh` instead of becoming a lesson.
 
 ## Rules
 

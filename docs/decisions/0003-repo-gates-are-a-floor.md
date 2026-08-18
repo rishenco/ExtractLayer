@@ -22,7 +22,9 @@ Keeping the floor forever would be that failure.
 
 The repo-level content gates are a floor with a defined end. A workspace that configures its
 own linter is no longer scanned by them: `el_drop_linted` removes its paths from
-`10-comments`, `20-budgets` and `30-slop`, and a `.vale.ini` retires the prose phrase list.
+`10-comments`, `20-budgets` and `30-slop`. The prose phrase list is retired by deleting it
+from the gate once a Vale style covers the same ground — a config file does not stand in for
+a check that runs.
 
 `55-lint-config.sh` makes the handoff a hard requirement rather than an intention. It fails
 once any workspace exists without its linter configured, naming the rules that must replace
