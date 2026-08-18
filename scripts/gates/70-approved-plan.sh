@@ -33,6 +33,6 @@ fi
 echo "source changed with no approved plan in this branch:"
 printf '%s\n' "$blocked" | sed 's/^/  /'
 echo
-echo "Run /spec then /plan, and have a human set 'Status: Approved' in work/<slug>/plan.md."
+echo "Run /plan, and have a human set 'Status: Approved' in work/<slug>/plan.md."
 echo "To skip a file deliberately, the commit that touches it carries '$EL_TRAILER <reason>'."
 exit 1

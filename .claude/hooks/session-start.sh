@@ -2,7 +2,7 @@
 set -uo pipefail
 cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
 
-echo "Definition of done: make check. Loop: /spec -> /plan -> approval -> /build -> review -> PR."
+echo "Definition of done: make check. Loop: /plan -> approval -> /build -> review -> PR."
 
 [ -f docs/vision.md ] || echo "docs/vision.md is missing. Run /vision before product work, or ask the human to."
 

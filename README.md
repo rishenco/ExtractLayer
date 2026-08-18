@@ -7,8 +7,7 @@ An open-source project that addresses one problem: LLM-based structured data ext
 Development runs through agents, gated by an executable definition of done.
 
 ```
-/spec  <idea>    intent and acceptance criteria       work/<slug>/spec.md
-/plan  <slug>    research and file-level steps        work/<slug>/plan.md   → you approve
+/plan  <idea>    intent, criteria and steps           work/<slug>/plan.md   → you approve
 /build <slug>    execute, verify, adversarial review  a green branch        → you approve the PR
 /compound        turn findings into gates             tests, gates, hooks
 ```
@@ -30,7 +29,7 @@ make gates       list gates and what each enforces
 AGENTS.md         operating rules, capped and enforced
 CLAUDE.md         thin Claude-specific layer over AGENTS.md
 docs/             vision, architecture, decisions, lessons
-work/<slug>/      spec, plan and review for one change
+work/<slug>/      plan, claims and review for one change
 scripts/gates/    the executable definition of done
 .claude/          skills, subagents, hooks
 ```

@@ -14,7 +14,7 @@ A claim about the code that `make check` cannot verify is either made verifiable
 
 ## The loop
 
-`/spec` → `/plan` → **human approves** → `/build` → claim audit → code review → PR → **human approves** → `/compound`
+`/plan` → **human approves** → `/build` → claim audit → code review → PR → **human approves** → `/compound`
 
 Claims about the work are separate from the work. `/build` writes `work/<slug>/claims.md`, the `claim-auditor` subagent reproduces each claim from scratch, and `scripts/gates/75-claims.sh` fails on any verdict that is `UNSUPPORTED`, `FALSE`, or missing. An agent's word is not evidence, including your own.
 
@@ -24,9 +24,9 @@ Skip only for changes that cannot be wrong in an interesting way — typos, a si
 
 ## Intent
 
-- Build what the spec says. Not the adjacent thing, not the general version of it.
-- Ambiguity is not an input to guess from. Resolve it in this order: check `docs/`, ask the human if reachable, otherwise record it under **Open questions** in the spec, take the smallest reversible option, and surface it in the PR body.
-- A request you believe is wrong gets challenged before it gets built. Say what is wrong, propose the alternative, then proceed with the human's answer. Building something you judged to be a mistake is a defect, not obedience. Record the objection and the answer in the spec — an objection nobody can find later is one that stops being raised.
+- Build what the plan says. Not the adjacent thing, not the general version of it.
+- Ambiguity is not an input to guess from. Resolve it in this order: check `docs/`, ask the human if reachable, otherwise record it under **Risks & open** in the plan, take the smallest reversible option, and surface it in the PR body.
+- A request you believe is wrong gets challenged before it gets built. Say what is wrong, propose the alternative, then proceed with the human's answer. Building something you judged to be a mistake is a defect, not obedience. Record the objection and the answer in the plan — an objection nobody can find later is one that stops being raised.
 - Unrequested scope is a defect. Refactors, renames, and "while I was in there" fixes belong in their own change.
 
 ## Shape of the code
