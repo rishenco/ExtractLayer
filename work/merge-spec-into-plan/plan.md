@@ -10,12 +10,12 @@ Objections: none.
 
 ## Criteria
 
-- [ ] A1 `/spec` is gone: `.claude/skills/spec/` does not exist.
-- [ ] A2 `/plan` writes one document holding problem, criteria, not-doing, research, approach, steps and risks, and shows the intent half to the human before the approach half exists.
-- [ ] A3 Acceptance criteria carry ids (`A1`, `A2`, ...) and `/build` ticks them in `plan.md`.
-- [ ] A4 Outside `work/`, nothing names `/spec` or `spec.md`.
-- [ ] A5 The lesson at `docs/lessons.md:15` is gone, its failure class being impossible.
-- [ ] A6 `make check` passes.
+- [x] A1 `/spec` is gone: `.claude/skills/spec/` does not exist. (C1)
+- [x] A2 `/plan` writes one document holding problem, criteria, not-doing, research, approach, steps and risks, and shows the intent half to the human before the approach half exists. (C2)
+- [x] A3 Acceptance criteria carry ids (`A1`, `A2`, ...) and `/build` ticks them in `plan.md`. (C3)
+- [x] A4 Outside `work/`, nothing names `/spec` or `spec.md`. (C4)
+- [x] A5 The lesson at `docs/lessons.md:15` is gone, its failure class being impossible. (C5)
+- [x] A6 `make check` passes. (C6)
 
 ## Not doing
 
@@ -40,12 +40,19 @@ Rejected — keeping both files and adding a consistency check between them: it 
 ## Steps
 
 1. Rewrite `.claude/skills/plan/SKILL.md` as the merged skill: the template, criterion ids, the two-pass interaction, the approval rule — files: `.claude/skills/plan/SKILL.md` — proves it: `for s in Problem Criteria "Not doing" Research Approach Steps Risks; do grep -q "## .*$s" .claude/skills/plan/SKILL.md || exit 1; done` (A2, A3)
+   - Done: skill rewritten with the seven sections, criterion ids and the two-pass interaction. Check failed on `Problem` before, passes after. 64 lines, under the 67-line bound.
 2. Delete the spec skill — files: `.claude/skills/spec/SKILL.md` — proves it: `[ ! -e .claude/skills/spec ]` (A1)
+   - Done: `git rm -r .claude/skills/spec`. Check failed before, passes after.
 3. Move the loop line and the skill list — files: `AGENTS.md`, `CLAUDE.md`, `README.md`, `docs/working.md`, `.claude/hooks/session-start.sh`, `scripts/gates/70-approved-plan.sh` — proves it: `! grep -rn '/spec\b' --include='*.md' --include='*.sh' . | grep -v '^./work/'` (A4)
+   - Done: loop line, skill table, gate message and `docs/working.md` now name `/plan` alone; `AGENTS.md` **Intent** points ambiguities and objections at the plan. Finding: this check also matches the `/spec` inside `work/<slug>/spec.md`, so it is the same check as step 4 and only passed once step 5 landed.
 4. Move the artifact readers onto `plan.md` — files: `.claude/skills/build/SKILL.md`, `.claude/agents/adversarial-reviewer.md`, `.claude/agents/claim-auditor.md`, `work/README.md`, `.github/pull_request_template.md` — proves it: `! grep -rn 'spec\.md' --include='*.md' --include='*.sh' . | grep -v '^./work/'` (A4)
+   - Done: both subagents, `/build`, `work/README.md` and the pull request template read `plan.md`. Passed once step 5 landed.
 5. Drop the `spec only, no plan` branch from the session hook — files: `.claude/hooks/session-start.sh` — proves it: `./scripts/gates/05-selftest.sh` passes and the hook prints one state per slug (A4)
+   - Done: the branch is a `continue` guard now. Selftest passes; the hook prints one `open work:` line per slug.
 6. Delete the drift lesson — files: `docs/lessons.md` — proves it: `! grep -q 'supersedes a spec section' docs/lessons.md` (A5)
+   - Done: line deleted, 25 lines to 24. Check failed before, passes after.
 7. Run the whole check — proves it: `make check` (A6)
+   - Done: passes. Between steps 3 and 6 only `75-claims` failed, for want of a ledger that does not exist until the Claim phase.
 
 ## Risks & open
 
