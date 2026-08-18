@@ -41,7 +41,7 @@ What this leaves alone. Include the adjacent thing someone will assume is includ
 What is there now, from the researcher, as path:line. Facts only.
 
 ## Approach
-The shape of the change in one paragraph and the layer it lands in, then each approach rejected and the reason it loses. At least one.
+The shape of the change in one paragraph, the layer it lands in and why not the neighbouring one, then each approach rejected and the reason it loses. At least one.
 
 ## Steps
 1. <what changes> — files: path, path — proves it: <the command that fails before and
