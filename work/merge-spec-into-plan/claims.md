@@ -69,8 +69,7 @@ Verdict: SUPPORTED
 Ran the count -> 2, exit 0, matching `docs/lessons.md:24-25`; deleting line 25 drops the count to 1 and the test exits 1.
 
 ## C11
-Claim: `.claude/agents/adversarial-reviewer.md` tells the reviewer how to judge a change that ships with no plan, and `work/merge-spec-into-plan/plan.md` carries one outcome note under each of its seven steps.
-Evidence: `.claude/agents/adversarial-reviewer.md:10`; the seven `- Done:` lines under the steps in `work/merge-spec-into-plan/plan.md`.
-Verify: `grep -q 'Skips-plan-gate' .claude/agents/adversarial-reviewer.md && [ "$(grep -c '^   - Done:' work/merge-spec-into-plan/plan.md)" -eq 7 ]`
-Verdict: SUPPORTED
-Ran the compound command -> exit 0: `.claude/agents/adversarial-reviewer.md:10` sends a change shipped under a `Skips-plan-gate:` trailer to `AGENTS.md` alone, and the seven steps at `work/merge-spec-into-plan/plan.md:43,45,47,49,51,53,55` each carry one `- Done:` line directly beneath, at `:44,46,48,50,52,54,56`; renaming the trailer exits 1, and retitling one `- Done:` drops the count to 6 and exits 1.
+Claim: `.claude/agents/adversarial-reviewer.md` tells the reviewer how to judge a change that ships with no plan; `work/merge-spec-into-plan/plan.md` carries one outcome note under each of its seven steps, and one correction under the research bullet it retracts.
+Evidence: `.claude/agents/adversarial-reviewer.md:10`; the seven `- Done:` lines under the steps and the `- Correction from the build:` line under Research in `work/merge-spec-into-plan/plan.md`.
+Verify: `grep -q 'Skips-plan-gate' .claude/agents/adversarial-reviewer.md && [ "$(grep -c '^   - Done:' work/merge-spec-into-plan/plan.md)" -eq 7 ] && [ "$(grep -c '^  - Correction from the build:' work/merge-spec-into-plan/plan.md)" -eq 1 ]`
+Verdict:
