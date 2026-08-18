@@ -46,3 +46,15 @@ Evidence: it prints `all gates pass` across all 12 gates, `05-selftest` through 
 Verify: `make check`
 Verdict: SUPPORTED
 Ran `make check` -> every gate `ok` from `05-selftest` to `75-claims`, twelve of them, then `all gates pass`, exit 0, with the seven verdicts written; on the same tree with the verdict lines blank it exits 2 at `75-claims`: `7 claims but 0 verdicts`.
+
+## C8
+Claim: `CHANGELOG.md` carries one line under `## [Unreleased]` naming `/reconcile` and what it does.
+Evidence: `CHANGELOG.md:11`, the last bullet of `### Added`, begins "- `/reconcile` checks the written record against the repo".
+Verify: `[ "$(awk '/^## \[Unreleased\]/{f=1} f && /^- .*\/reconcile/' CHANGELOG.md | wc -l)" -eq 1 ]`
+Verdict:
+
+## C9
+Claim: All seven acceptance criteria in `work/reconcile-skill/plan.md` are ticked and each names the claim that settles it.
+Evidence: `work/reconcile-skill/plan.md:13-19` are seven `- [x] A<n> ... (C<n>)` lines.
+Verify: `[ "$(grep -cE '^- \[x\] A[0-9]+ .*\(C[0-9]+\)$' work/reconcile-skill/plan.md)" -eq 7 ] && ! grep -q '^- \[ \]' work/reconcile-skill/plan.md`
+Verdict:
