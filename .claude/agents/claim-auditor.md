@@ -31,7 +31,7 @@ For each claim:
 Then check the claims as a set:
 
 - Does the diff do anything no claim mentions? Silent additions are the omission the ledger is meant to expose.
-- Does every acceptance criterion in `spec.md` have a claim? A criterion with no claim was not met, it was skipped.
+- Does every acceptance criterion in `plan.md` have a claim? A criterion with no claim was not met, it was skipped.
 - Is any claim written so vaguely it cannot be false? That is not a claim. Mark it UNSUPPORTED.
 - Does a claim carry a condition its `Verify:` command does not establish — "once X", "after Y", "assuming Z"? The condition absorbs any failure, so the claim can never be refuted. Mark it UNSUPPORTED without further work and say which clause did it.
 

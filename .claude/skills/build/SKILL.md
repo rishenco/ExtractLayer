@@ -26,7 +26,7 @@ When a step turns out to need something not in the plan, that is a finding, not 
 
 ## Claim
 
-Write `work/<slug>/claims.md`, one block per claim, with a claim for every acceptance criterion in the spec and one for `make check`:
+Write `work/<slug>/claims.md`, one block per claim, with a claim for every acceptance criterion in the plan and one for `make check`:
 
 ```
 ## C1
@@ -42,7 +42,7 @@ Never hedge a claim with a condition its `Verify:` command does not establish. "
 
 `claims.md` is claim blocks and verdicts, nothing else. No preamble, no account of what a review changed or who directed what — the ledger describes the tree as it stands; its history is git's job.
 
-Then tick each acceptance criterion in `spec.md` next to the claim that settles it, and put the user-visible effect in `CHANGELOG.md` under `## [Unreleased]` — one product-level line on what a user can now do, never which files moved or what prompted the change.
+Then tick each acceptance criterion in `plan.md` next to the claim that settles it, and put the user-visible effect in `CHANGELOG.md` under `## [Unreleased]` — one product-level line on what a user can now do, never which files moved or what prompted the change.
 
 ## Audit
 
