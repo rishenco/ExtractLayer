@@ -1,6 +1,6 @@
 # A skill that reconciles the written record with the repo
 
-Status: Draft
+Status: Approved
 
 ## Problem / Intent
 

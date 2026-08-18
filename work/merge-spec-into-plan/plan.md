@@ -1,6 +1,6 @@
 # Merge the spec into the plan
 
-Status: Draft
+Status: Approved
 
 ## Problem / Intent
 
