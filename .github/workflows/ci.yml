@@ -17,14 +17,10 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install node workspaces
-        run: |
-          find . -name package.json -not -path '*/node_modules/*' -print0 \
-            | while IFS= read -r -d '' manifest; do
-                dir="$(dirname "$manifest")"
-                echo "installing $dir"
-                (cd "$dir" && npm ci)
-              done
-        shell: bash
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: scripts/install-workspaces.sh
 
       - run: make check

@@ -42,6 +42,13 @@ that audit happened and judge the code.
 12. What input makes this wrong? Name concrete values and the resulting behaviour.
 13. What does the change break for existing callers?
 
+## Writing
+14. Does any committed doc in the diff narrate its own making — who asked, what a review
+    changed, what the repo used to contain? A doc has one role and must read complete to
+    someone with none of that history. The rule holds under `work/` too; `docs/lessons.md` is
+    the one exception. `scripts/gates/35-narration.sh` floors only the common phrasings, so
+    wording that slips past it is yours to catch.
+
 ## Output
 
 For each finding: severity `blocking` or `minor`, the claim in one sentence, `path:line`, and

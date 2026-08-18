@@ -52,6 +52,9 @@ Things a reader would expect here that are out of scope.
 - Steps are ordered so the repo is working after each one, never only at the end.
 - If the plan needs a new dependency, a schema change, or a boundary change in
   `docs/architecture.md`, that is an ADR in `docs/decisions/` — write it as part of this step.
+- An ADR argues from what the product needs now. Its context is the constraint that forces
+  the decision — never the story of what the repo used to do or where the question came up.
+  A reader holding only `docs/` must find it complete.
 - If research showed the spec is not buildable as written, stop and say so. Do not plan around
   a broken spec.
 

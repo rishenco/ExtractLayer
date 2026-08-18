@@ -23,7 +23,7 @@ fi
 [ -s "$list" ] || exit 0
 
 report=""
-for gate in 10-comments 30-slop; do
+for gate in 10-comments 30-slop 35-narration; do
   out="$(EL_FILE_LIST="$list" "./scripts/gates/$gate.sh" 2>&1)" || report+="$out"$'\n'
 done
 

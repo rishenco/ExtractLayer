@@ -5,7 +5,7 @@ Status: Proposed | Accepted | Superseded by NNNN
 
 ## Context
 
-What forced a decision. Constraints that were real at the time.
+What forced a decision. Constraints that force it.
 
 ## Decision
 
