@@ -1,17 +1,21 @@
 ---
 name: reconcile
 description: Check the committed prose against the repo — dangling citations, contradictions, one rule stated in many files — and fix what is mechanical. Use when the written record has drifted from the code, or before planning from a document nobody has checked lately.
-argument-hint: "[path to narrow to, optional]"
 ---
 
 The repo is the fact; committed prose is a claim about it. Drift is silent — nothing fails when a document names something that does not exist.
 
-Three checks. Each runs its command first and judges second, so a verdict traces to a stated rule rather than to taste. They share two file lists, which include what is written but not yet committed:
+Three checks. Each runs its command first and judges second, so a verdict traces to a stated rule rather than to taste.
+
+Run this block first, from the repository root, in the shell the three checks run in. They call its functions, and a shell that lacks them prints nothing and exits 0 — which reads exactly like a clean repo.
 
 ```bash
-prose() { { git ls-files '*.md'; git ls-files --others --exclude-standard '*.md'; } | grep -v '^work/' | sort -u; }
-code()  { { git ls-files;        git ls-files --others --exclude-standard;        } | grep -v '\.md$'  | sort -u; }
+. scripts/lib/files.sh
+prose() { el_repo_files | grep -E '\.md$'  | grep -vE '(^|/)work/'; }
+code()  { el_repo_files | grep -vE '\.md$' | grep -vE "$EL_SKIP_DIRS"; }
 ```
+
+Both lists come from `el_repo_files`, so they cover what is written but not yet committed, and they read a path with non-ASCII characters as itself rather than as a quoted escape. `prose` is every markdown file outside `work/`, the scope `scripts/gates/45-doc-links.sh` already uses; `code` is everything else, minus the directories `EL_SKIP_DIRS` names. A vendored tree therefore reaches `prose`: exclude it in `scripts/lib/files.sh`, where every gate picks the change up, never here.
 
 ## Dangling citations
 
@@ -32,27 +36,30 @@ done
 
 Each hit is dead or early. Dead: the thing was never built or no longer is, and the sentence around it describes something that does not exist — cut the sentence, or correct the name to what the code calls it. Early: the design names it and the code has not caught up — leave it, and say so.
 
-The scan reads identifiers only. A citation carrying no identifier — a component named in words alone — is invisible to it and rots the same way. Read the sentences around each hit for the unbackticked neighbours the scan cannot reach.
+Blind spot: the scan reads identifiers only. A citation carrying no identifier — a component named in words alone — is invisible to it and rots the same way. Read the sentences around each hit for the unbackticked neighbours the scan cannot reach.
 
 ## Contradictions
 
-Prose that states a magnitude or a name about something executable, where the executable says otherwise.
+Prose that states a magnitude about something executable, where the executable says otherwise.
 
 ```bash
 prose | while IFS= read -r f; do
   grep -nE '`(scripts/|make )[^`]*`' "$f" | sed "s|^|$f:|"
-done | awk '{ rest=$0; sub(/^[^:]*:[0-9]+:/,"",rest); gsub(/`[^`]*`/,"",rest)
+done | sed -E 's/`([0-9]+)`/ \1 /g' \
+     | awk '{ rest=$0; sub(/^[^:]*:[0-9]+:/,"",rest); gsub(/`[^`]*`/,"",rest)
               sub(/^[[:space:]]*[0-9]+\.[[:space:]]/,"",rest)
               if (rest ~ /[0-9][0-9]/) print }'
 ```
 
 Open the file each line names and compare. The executable wins: prose is edited to match it, never the reverse. A number that no file defines is not a contradiction — it is an assertion nothing settles, so it moves to the file that could define it, or goes.
 
+Blind spot: this sees a magnitude of two digits or more on a line naming a path under `scripts/` or a make target. A single-digit count, a name that is simply wrong, and any claim about a hook or a workspace linter all pass it untouched. Those are read, not scanned.
+
 ## Duplicated sources of truth
 
 ```bash
 prose | while IFS= read -r f; do
-  grep -oE '`[^`]+`' "$f" | tr -d '`' | sort -u | sed "s|^|$f\t|"
+  grep -oE '`[^`]+`' "$f" | tr -d '`' | sort -u | while IFS= read -r t; do printf '%s\t%s\n' "$f" "$t"; done
 done | awk -F'\t' '{ c[$2]++ } END { for (t in c) if (c[t] >= 3) printf "%2d  %s\n", c[t], t }' | sort -rn
 ```
 
@@ -82,7 +89,7 @@ Nothing under `work/`. A plan and its claims record what was intended when they 
 
 ## Report
 
-Per finding: path and line, the check that found it, the verdict, and the rule the verdict came from. Two outcomes only — fixed mechanically, or needs a decision.
+Per finding: path and line, the check that found it, the verdict, and the rule the verdict came from. Two outcomes only — fixed mechanically, or needs a decision. Each check reports its blind spot alongside its findings, so a clean run is never read as a clean repo.
 
 Apply the mechanical fixes: a dead citation cut, a number corrected to what the executable defines, a losing copy turned into a pointer. Anything that changes what a rule means goes to the human as a question with the option you would take.
 

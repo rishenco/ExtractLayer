@@ -42,13 +42,13 @@ Rejected — a gate instead of a skill: contradiction and canonical-home choices
 ## Steps
 
 1. Write the skill: the three checks with their commands, the precedence ladder, the not-to-flag list, the `work/` rule, the blind spot, the output format, and the handoff to `/compound` — files: `.claude/skills/reconcile/SKILL.md` — proves it: `grep -q 'work/' .claude/skills/reconcile/SKILL.md && grep -q 'Do not flag' .claude/skills/reconcile/SKILL.md` (A1, A3, A4, A5)
-   - Done: the skill carries the three checks with their commands, the ladder, the not-to-flag list, the `work/` rule, the blind spot, the output format and the `/compound` handoff. 89 lines. Check failed before the file existed, passes after. Finding: the commands first read tracked files only, so prose written and not yet committed — this skill included — was invisible to them; both file lists now add `git ls-files --others --exclude-standard`.
+   - Done: the skill carries the three checks with their commands, the ladder, the not-to-flag list, the `work/` rule, a blind spot per check, the output format and the `/compound` handoff. 96 lines. Check failed before the file existed, passes after. Finding: a scan reading only tracked files cannot see the prose being written, so both lists come from `el_repo_files`, which covers untracked files and reads a non-ASCII path as itself.
 2. Verify the scan on the repo as it stands — files: none — proves it: the command from the skill prints exactly `assign_split`, `add_pairs`, `derived_values` (A2)
    - Done: the first two blocks of the skill, run verbatim, print `assign_split`, `add_pairs` and `derived_values` on `docs/lessons.md:14` and `:20`, and nothing else. The other two blocks run clean: contradictions narrows to one line, `AGENTS.md:67`, whose 120 matches `AGENTS_MAX` in `scripts/gates/20-budgets.sh`; duplicates lists 34 candidate spans. Finding: the plan cites `docs/lessons.md:21` for the second line, which is `:20` since a lesson above it was deleted.
 3. Name the skill where the others are named — files: `CLAUDE.md`, `README.md` — proves it: `grep -q reconcile CLAUDE.md README.md` (A6)
    - Done: `CLAUDE.md` names it as a skill outside the loop, `README.md` adds it to the skill table. Check failed before, passes after.
 4. Run the whole check — proves it: `make check` (A7)
-   - Done: passes. `40-changelog`, `70-approved-plan` and `75-claims` first reported no base ref, which is the local clone lacking `origin/main`, not a failure of the change; they pass once it is fetched.
+   - Done: passes, twelve gates. Finding: `40-changelog`, `70-approved-plan` and `75-claims` verify nothing unless the base ref resolves, so a clone without `origin/main` fails all three regardless of the change.
 
 ## Risks & open
 
