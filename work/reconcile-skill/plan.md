@@ -10,13 +10,13 @@ Objections: none.
 
 ## Criteria
 
-- [ ] A1 `.claude/skills/reconcile/SKILL.md` exists, with a description stating when to run it.
-- [ ] A2 The skill carries a scan command; run against the repo as it stands it names `assign_split`, `add_pairs` and `derived_values`, and nothing else.
-- [ ] A3 The skill states the precedence ladder that picks the canonical home for a duplicated rule, and replaces the other copies with a pointer rather than deleting them.
-- [ ] A4 The skill states what not to flag, and that it never edits a `work/<slug>/` directory.
-- [ ] A5 The skill states the scan's blind spot: a citation with no identifier in it.
-- [ ] A6 `/reconcile` is named in `CLAUDE.md` and `README.md`.
-- [ ] A7 `make check` passes.
+- [x] A1 `.claude/skills/reconcile/SKILL.md` exists, with a description stating when to run it. (C1)
+- [x] A2 The skill carries a scan command; run against the repo as it stands it names `assign_split`, `add_pairs` and `derived_values`, and nothing else. (C2)
+- [x] A3 The skill states the precedence ladder that picks the canonical home for a duplicated rule, and replaces the other copies with a pointer rather than deleting them. (C3)
+- [x] A4 The skill states what not to flag, and that it never edits a `work/<slug>/` directory. (C4)
+- [x] A5 The skill states the scan's blind spot: a citation with no identifier in it. (C5)
+- [x] A6 `/reconcile` is named in `CLAUDE.md` and `README.md`. (C6)
+- [x] A7 `make check` passes. (C7)
 
 ## Not doing
 
@@ -42,9 +42,13 @@ Rejected — a gate instead of a skill: contradiction and canonical-home choices
 ## Steps
 
 1. Write the skill: the three checks with their commands, the precedence ladder, the not-to-flag list, the `work/` rule, the blind spot, the output format, and the handoff to `/compound` — files: `.claude/skills/reconcile/SKILL.md` — proves it: `grep -q 'work/' .claude/skills/reconcile/SKILL.md && grep -q 'Do not flag' .claude/skills/reconcile/SKILL.md` (A1, A3, A4, A5)
+   - Done: the skill carries the three checks with their commands, the ladder, the not-to-flag list, the `work/` rule, the blind spot, the output format and the `/compound` handoff. 89 lines. Check failed before the file existed, passes after. Finding: the commands first read tracked files only, so prose written and not yet committed — this skill included — was invisible to them; both file lists now add `git ls-files --others --exclude-standard`.
 2. Verify the scan on the repo as it stands — files: none — proves it: the command from the skill prints exactly `assign_split`, `add_pairs`, `derived_values` (A2)
+   - Done: the first two blocks of the skill, run verbatim, print `assign_split`, `add_pairs` and `derived_values` on `docs/lessons.md:14` and `:20`, and nothing else. The other two blocks run clean: contradictions narrows to one line, `AGENTS.md:67`, whose 120 matches `AGENTS_MAX` in `scripts/gates/20-budgets.sh`; duplicates lists 33 candidate spans. Finding: the plan cites `docs/lessons.md:21` for the second line, which is `:20` since a lesson above it was deleted.
 3. Name the skill where the others are named — files: `CLAUDE.md`, `README.md` — proves it: `grep -q reconcile CLAUDE.md README.md` (A6)
+   - Done: `CLAUDE.md` names it as a skill outside the loop, `README.md` adds it to the skill table. Check failed before, passes after.
 4. Run the whole check — proves it: `make check` (A7)
+   - Done: passes. `40-changelog`, `70-approved-plan` and `75-claims` first reported no base ref, which is the local clone lacking `origin/main`, not a failure of the change; they pass once it is fetched.
 
 ## Risks & open
 
