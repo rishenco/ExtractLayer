@@ -54,7 +54,9 @@ in `docs/decisions/` instead — vision holds product intent, decisions hold eng
 commitments.
 
 Update the first line of `README.md` to their one-sentence answer, and log the change in
-`CHANGELOG.md`.
+`CHANGELOG.md`. The README and the vision describe the product, never the repository's
+condition at a moment in time — a phase, a rewrite in progress, a not-yet-built state goes
+under **Open** or nowhere.
 
 Finish by reading back only the **Always true**, **Never** and **Open** sections and asking
 whether they are right. Those three are what future agents will refuse work over.

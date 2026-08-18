@@ -1,6 +1,8 @@
 # ExtractLayer
 
-Open-source SaaS. Product intent is captured in `docs/vision.md` — run `/vision` to write it.
+An open-source project that addresses one problem: LLM-based structured data extraction.
+Product intent lives in `docs/vision.md`; the implementation description in
+`docs/architecture.md`.
 
 ## Working here
 

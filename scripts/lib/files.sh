@@ -97,25 +97,33 @@ el_linted_dirs() {
     case "$(basename "$manifest")" in
       package.json)
         el_any_exists "$dir"/eslint.config.{js,mjs,cjs,ts} "$dir"/.eslintrc.{js,cjs,json,yml,yaml} \
-          && printf '%s\n' "$dir"
+          && printf '%s\t%s\n' "$dir" "ts tsx js jsx mjs cjs"
         ;;
-      pyproject.toml) grep -q 'tool.ruff' "$manifest" 2>/dev/null && printf '%s\n' "$dir" ;;
-      go.mod) el_any_exists "$dir"/.golangci.{yml,yaml,toml,json} && printf '%s\n' "$dir" ;;
+      pyproject.toml)
+        grep -q 'tool.ruff' "$manifest" 2>/dev/null && printf '%s\t%s\n' "$dir" "py"
+        ;;
+      go.mod)
+        el_any_exists "$dir"/.golangci.{yml,yaml,toml,json} && printf '%s\t%s\n' "$dir" "go"
+        ;;
     esac
   done < <(el_workspaces)
 }
 
 el_drop_linted() {
-  local dirs f d keep
-  dirs="$(el_linted_dirs)"
-  [ -z "$dirs" ] && { cat; return 0; }
+  local entries f entry dir exts ext keep
+  entries="$(el_linted_dirs)"
+  [ -z "$entries" ] && { cat; return 0; }
   while IFS= read -r f; do
     keep=1
-    while IFS= read -r d; do
-      [ -n "$d" ] || continue
-      [ "$d" = "." ] && { keep=0; break; }
-      case "$f" in "$d"/*) keep=0; break ;; esac
-    done <<<"$dirs"
+    ext="${f##*.}"
+    while IFS= read -r entry; do
+      [ -n "$entry" ] || continue
+      dir="${entry%%	*}"
+      exts="${entry#*	}"
+      case " $exts " in *" $ext "*) ;; *) continue ;; esac
+      [ "$dir" = "." ] && { keep=0; break; }
+      case "$f" in "$dir"/*) keep=0; break ;; esac
+    done <<<"$entries"
     [ "$keep" -eq 1 ] && printf '%s\n' "$f"
   done
 }

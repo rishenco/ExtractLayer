@@ -17,6 +17,20 @@ jobs:
         with:
           node-version: '22'
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install python workspaces
+        run: |
+          find . -name pyproject.toml -not -path '*/node_modules/*' -print0 \
+            | while IFS= read -r -d '' manifest; do
+                dir="$(dirname "$manifest")"
+                echo "installing $dir"
+                (cd "$dir" && pip install -e '.[dev]')
+              done
+        shell: bash
+
       - name: Install node workspaces
         run: |
           find . -name package.json -not -path '*/node_modules/*' -print0 \

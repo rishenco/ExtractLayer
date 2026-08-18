@@ -48,8 +48,13 @@ you already know nothing can check and hope it passes.
 Never hedge a claim with a condition its `Verify:` command does not establish. "Passes once X"
 cannot be refuted, which means it cannot be checked either.
 
+`claims.md` is claim blocks and verdicts, nothing else. No preamble, no account of what a
+review changed or who directed what — the ledger describes the tree as it stands; its history
+is git's job.
+
 Then tick each acceptance criterion in `spec.md` next to the claim that settles it, and put the
-user-visible effect in `CHANGELOG.md` under `## [Unreleased]`.
+user-visible effect in `CHANGELOG.md` under `## [Unreleased]` — one product-level line on what
+a user can now do, never which files moved or what prompted the change.
 
 ## Audit
 

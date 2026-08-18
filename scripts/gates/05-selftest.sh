@@ -96,14 +96,29 @@ expect 20-budgets.sh 1 "oversized source is caught"
 fixture short.ts 'export const a = 1'
 expect 20-budgets.sh 0 "source within budget passes"
 
-fixture filler.md 'It'"'"'s worth noting that this sentence is empty.'
+fixture filler.ts 'export const s = "It is worth noting that this sentence is empty."'
 expect 30-slop.sh 1 "filler phrasing is caught"
 
-fixture curly.md 'It’s worth noting that this sentence is empty.'
+fixture curly.ts 'export const s = "It’s worth noting that this sentence is empty."'
 expect 30-slop.sh 1 "filler with a typographic apostrophe is caught"
+
+fixture filler.md 'It is worth noting that this sentence is empty.'
+expect 30-slop.sh 0 "markdown phrasing belongs to vale once .vale.ini exists"
 
 fixture clean.ts 'export const a = 1'
 expect 30-slop.sh 0 "clean source passes"
+
+fixture narrated.md 'The first slice ran on SQLite until a review round replaced it.'
+expect 35-narration.sh 1 "session narration in committed markdown is caught"
+
+fixture timeless.md 'Postgres is the only supported store.'
+expect 35-narration.sh 0 "timeless markdown passes"
+
+fixture work/nb/claims.md 'Restated after the second review round.'
+expect 35-narration.sh 1 "a ledger under work/ has no memory of its review either"
+
+fixture docs/lessons.md '- Keep ledgers verdict-only — found when the founder caught a narrated preamble.'
+expect 35-narration.sh 0 "lessons provenance may name who found it"
 
 fixture ws1/package.json '{"name":"fixture","scripts":{}}'
 expect 50-architecture.sh 1 "workspace without boundary config is caught"
@@ -142,6 +157,13 @@ expect 10-comments.sh 0 "a linted workspace is no longer scanned by the floor"
 
 printf '%s\n' "$WORK/lint2/bad.ts" >"$WORK/list"
 expect 10-comments.sh 1 "the floor still scans a file outside any linted workspace"
+
+add_file bad.sh '# explains the loop
+echo hi'
+add_file pyproject.toml '[tool.ruff]
+line-length = 99'
+printf '%s\n%s\n' "$WORK/pyproject.toml" "$WORK/bad.sh" >"$WORK/list"
+expect 10-comments.sh 1 "a root workspace does not retire the floor for what its linter cannot parse"
 
 if command -v npm >/dev/null 2>&1; then
   mkdir -p "$WORK/ws2/node_modules"

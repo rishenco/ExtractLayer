@@ -1,13 +1,10 @@
 # ExtractLayer — Operating Rules
 
-Open-source SaaS. UI: TypeScript/React. Backend: undecided (see `docs/decisions/0002-backend-stack.md`).
-
 | Where intent lives | File |
 | --- | --- |
-| What we build and refuse to build | `docs/vision.md` (run `/vision` if missing) |
-| Layers and the dependency rule | `docs/architecture.md` |
-| Decisions and their reasons | `docs/decisions/` |
-| Rules that could not be made executable | `docs/lessons.md` |
+| What the product is, refuses to be, and will grow into | `docs/vision.md` (run `/vision` if missing) |
+| How it is built: entities, storage, API, workflows, layers | `docs/architecture.md` |
+| Justifications for specific decisions | `docs/decisions/` |
 
 ## Definition of done
 
@@ -51,6 +48,12 @@ commit that touches the file. Skipping is allowed; skipping silently is not.
 
 - Fix causes at the layer that owns them. A fix at a different layer than its cause is a
   workaround — label it as one and propose the real fix.
+- A name carries its domain: `DatasetKind`, never `Kind`; behaviour lives on the type
+  (`JobStatus.is_terminal`), never in a context-less global. Plain words beat
+  architecture jargon — `dependencies`, not ports; `service`/`repo`/`transport`. A niche
+  concept is folded into the one thing that uses it, never a top-level type.
+- One entity per file; keep the tree flat. No product prefix on configuration names:
+  `API_PORT`, never `EXTRACTLAYER_PORT`.
 - Abstractions earn their place with a second real caller. Not an imagined one.
 - Deleting is a valid change. Prefer it.
 - No code comments. Exceptions: directives (`//nolint`, `# noqa`, `// @ts-expect-error`) and
@@ -62,9 +65,14 @@ commit that touches the file. Skipping is allowed; skipping silently is not.
 ## Shape of the writing
 
 - Short and declarative. State what is true, not the path you took to it.
-- No reasoning-in-progress in committed text. Docs and code are the source of truth, not a
-  draft of your thinking.
-- Every user-visible change updates `CHANGELOG.md` under `## [Unreleased]`.
+- No reasoning-in-progress in committed text, and no memory of it: a committed file has one
+  role and never cites the session, the review, or what the repo used to contain —
+  `scripts/gates/35-narration.sh` floors the common phrasings.
+- Every fact sits at its file's and section's own level of abstraction: no UI details in
+  entity definitions, no vendors in foundational blocks, no configuration at the top of an
+  architecture. Never state the absence of something nobody proposed.
+- Every user-visible change adds one product-level line to `CHANGELOG.md` under
+  `## [Unreleased]` — what a user can now do; the diff records the rest.
 
 ## Growing the system
 
