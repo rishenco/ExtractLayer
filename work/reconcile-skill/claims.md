@@ -45,16 +45,18 @@ Claim: `make check` passes on this tree.
 Evidence: it prints `all gates pass` across all 12 gates, `05-selftest` through `75-claims`.
 Verify: `make check`
 Verdict: SUPPORTED
-Ran `make check` -> every gate `ok` from `05-selftest` to `75-claims`, twelve of them, then `all gates pass`, exit 0, with the seven verdicts written; on the same tree with the verdict lines blank it exits 2 at `75-claims`: `7 claims but 0 verdicts`.
+Ran `make check` -> every gate `ok` from `05-selftest` to `75-claims`, twelve of them, then `all gates pass`, exit 0, with the nine verdicts written; on the same tree with any verdict line blank it exits 2 at `75-claims`, which reports `9 claims but 7 verdicts` for the two blanked last.
 
 ## C8
 Claim: `CHANGELOG.md` carries one line under `## [Unreleased]` naming `/reconcile` and what it does.
 Evidence: `CHANGELOG.md:11`, the last bullet of `### Added`, begins "- `/reconcile` checks the written record against the repo".
 Verify: `[ "$(awk '/^## \[Unreleased\]/{f=1} f && /^- .*\/reconcile/' CHANGELOG.md | wc -l)" -eq 1 ]`
-Verdict:
+Verdict: SUPPORTED
+Ran the awk-and-count test -> exit 0; `CHANGELOG.md:11` is the last bullet of `### Added` under `## [Unreleased]` and begins "- `/reconcile` checks the written record against the repo"; deleting the bullet, duplicating it, or moving it above the `## [Unreleased]` heading each makes the command exit 1.
 
 ## C9
 Claim: All seven acceptance criteria in `work/reconcile-skill/plan.md` are ticked and each names the claim that settles it.
 Evidence: `work/reconcile-skill/plan.md:13-19` are seven `- [x] A<n> ... (C<n>)` lines.
 Verify: `[ "$(grep -cE '^- \[x\] A[0-9]+ .*\(C[0-9]+\)$' work/reconcile-skill/plan.md)" -eq 7 ] && ! grep -q '^- \[ \]' work/reconcile-skill/plan.md`
-Verdict:
+Verdict: SUPPORTED
+Ran the two-part test -> exit 0; `work/reconcile-skill/plan.md:13-19` are seven `- [x] A<n> ... (C<n>)` lines, A1 through A7 naming C1 through C7, and no unticked box remains in the file; unticking A5 or stripping the `(C7)` tag from A7 each makes it exit 1.
