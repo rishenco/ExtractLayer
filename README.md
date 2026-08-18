@@ -10,6 +10,7 @@ Development runs through agents, gated by an executable definition of done.
 /plan  <idea>    intent, criteria and steps           work/<slug>/plan.md   → you approve
 /build <slug>    execute, verify, adversarial review  a green branch        → you approve the PR
 /compound        turn findings into gates             tests, gates, hooks
+/reconcile       realign the prose with the repo      fixes and open questions
 ```
 
 `make check` is the definition of done. It runs every gate in `scripts/gates/` plus each workspace's own checks. CI runs the same command — there is no second, weaker standard, and a workspace whose tooling is missing fails rather than skipping, in CI as locally.
