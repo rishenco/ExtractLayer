@@ -45,9 +45,9 @@ that audit happened and judge the code.
 ## Writing
 14. Does any committed doc in the diff narrate its own making — who asked, what a review
     changed, what the repo used to contain? A doc has one role and must read complete to
-    someone with none of that history. Ledgers under `work/` and `docs/lessons.md` are the
-    exceptions; `scripts/gates/35-narration.sh` floors only the common phrasings, so wording
-    that slips past it is yours to catch.
+    someone with none of that history. The rule holds under `work/` too; `docs/lessons.md` is
+    the one exception. `scripts/gates/35-narration.sh` floors only the common phrasings, so
+    wording that slips past it is yours to catch.
 
 ## Output
 

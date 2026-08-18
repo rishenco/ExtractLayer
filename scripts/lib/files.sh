@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 EL_CODE_EXT="go ts tsx js jsx mjs cjs py rb rs java kt sql sh"
-EL_SKIP_DIRS='(^|/)(node_modules|vendor|dist|build|\.next|target)/|^(work|docs)/'
+EL_SKIP_DIRS='(^|/)(node_modules|vendor|dist|build|\.next|target|\.venv)/|^(work|docs)/'
 
 el_repo_files() {
   if [ -n "${EL_FILE_LIST:-}" ]; then

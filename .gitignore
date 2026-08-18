@@ -6,3 +6,4 @@ __pycache__/
 .import_linter_cache/
 .hypothesis/
 node_modules/
+.venv/

@@ -103,7 +103,10 @@ fixture curly.ts 'export const s = "It’s worth noting that this sentence is em
 expect 30-slop.sh 1 "filler with a typographic apostrophe is caught"
 
 fixture filler.md 'It is worth noting that this sentence is empty.'
-expect 30-slop.sh 0 "markdown phrasing belongs to vale once .vale.ini exists"
+expect 30-slop.sh 1 "filler phrasing in markdown is caught"
+
+fixture todo.md '- TODO: decide the retention window'
+expect 30-slop.sh 1 "an unowned TODO in markdown is caught"
 
 fixture clean.ts 'export const a = 1'
 expect 30-slop.sh 0 "clean source passes"
@@ -119,6 +122,24 @@ expect 35-narration.sh 1 "a ledger under work/ has no memory of its review eithe
 
 fixture docs/lessons.md '- Keep ledgers verdict-only — found when the founder caught a narrated preamble.'
 expect 35-narration.sh 0 "lessons provenance may name who found it"
+
+fixture doclink.md 'See docs/does-not-exist.md for details.'
+expect 45-doc-links.sh 1 "a broken docs path in markdown is caught"
+
+fixture untracked.md 'See scripts/gates/nothing-here.sh for details.'
+expect 45-doc-links.sh 1 "a file git does not track yet is still scanned"
+
+fixture wordlike.md 'The framework/plugin dir and the network/setup are fine.'
+expect 45-doc-links.sh 0 "a word ending in a scanned directory name is not a path"
+
+fixture resolves.md 'The gates live in scripts/gates/ and run from scripts/check.sh.'
+expect 45-doc-links.sh 0 "a path that resolves passes"
+
+fixture placeholder.md 'A plan lives at work/<slug>/plan.md.'
+expect 45-doc-links.sh 0 "a placeholder segment is not a path to resolve"
+
+fixture work/wl/notes.md 'See docs/does-not-exist.md.'
+expect 45-doc-links.sh 0 "references inside work/ are not checked"
 
 fixture ws1/package.json '{"name":"fixture","scripts":{}}'
 expect 50-architecture.sh 1 "workspace without boundary config is caught"

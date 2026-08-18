@@ -21,8 +21,8 @@ FastAPI builds the REST side. Starlette, uvicorn and pydantic already ship trans
 with the `mcp` SDK, so the marginal dependency is small, and it replaces request
 validation that would otherwise be hand-written.
 
-The two transports listen on separate TCP ports — `API_PORT` for REST, `MCP_PORT` for
-MCP — served by one process.
+One process serves both transports on one port, `API_PORT`: REST at the root, MCP mounted
+at `/mcp`.
 
 ## Consequences
 
@@ -30,8 +30,8 @@ A capability added to a service reaches both surfaces only if both transports ex
 nothing enforces the mirror beyond the tests, so a tool added to one and forgotten in
 the other is a real failure mode.
 
-Two ports to expose rather than one. Mounting both on a single port stays available
-later — it is a composition-root change, not a design change.
+One port to expose. Splitting the transports onto separate ports stays available later — it
+is a composition-root change, not a design change.
 
 The layer contract holds for both: `transport` imports `domain` and its own
 dependencies, never `service` or `repo`.

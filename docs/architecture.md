@@ -38,7 +38,8 @@ created_at, updated_at.
 **Source columns** — a named list outside the schema, untyped: values are strings. One
 wire name everywhere: the names are `source_columns`; a row of values is `source_values`,
 a map of column name to string. A missing, non-string or unknown source field is a named
-row error.
+row error. The list is create-only — renaming or dropping one would invalidate every
+stored row.
 
 **Schema** — the derived columns, one JSON per extractor: JSON Schema draft 2020-12 with
 `"type": "object"` and at least one property. Top-level fields are the columns; a
@@ -47,9 +48,9 @@ validated with every column wrapped `anyOf` null and `required` dropped; missing
 normalize to `null`; unknown columns are rejected. Per-column metric config rides the
 `x-el` keyword: `{"metric": <kind>}` on a column, or on an array column's `items` for
 the element metric; unknown `x-el` keys are rejected; `x-el` is stripped before any LLM
-call. Editing a schema spawns an extractor-tied migration job: adding a column lands it
-empty, removing one drops its values, and changing a column's type is refused — type
-changes wait for per-column migration functions, a later capability.
+call. A schema edit adds and removes columns only, applied in the write itself: an added
+column reads null on older rows, a removed one drops its values, and a type change is
+refused — per-column migration functions are a later capability.
 
 **Model** — a procedure `(source_columns) => (derived_columns)` held as a specification
 JSON. Implementations may be LLM, code or classic ML; the MVP ships LLM + prompt.
@@ -90,38 +91,38 @@ Table `eval_scores` (append-only): id, job_id, dataset_row_id, field_scores `jso
 row_score, created_at — `dataset_row_id` is a plain reference, not a cascading FK, so
 eval history survives the rows it scored being edited or deleted.
 
-**Job** — the one shape of asynchronous work: gap-filling, evals, training, schema
-migrations, agentic drafting, system maintenance — a job need not belong to an
-extractor. A job is a database row a worker claims under a fenced lease and works with a
-~2s tick: renew the claim, pull the signal, write a small progress JSON polled through
-the API. Checkpoints at logical boundaries make jobs resumable and idempotent. Status is
-one of `pending`, `running`, `stopped`, `done`, `error`, `killed`; a job carries
-kind-specific metadata (an eval job, its aggregates), so one jobs interface shows every
-kind. Mechanism: `docs/decisions/0011-jobs-claimed-from-the-database.md`.
+**Job** — the one shape of asynchronous work: gap-filling, evals, training, agentic
+drafting, system maintenance — a job need not belong to an extractor. A job is a database
+row a worker claims under a fenced lease and works with a ~2s tick: renew the claim, pull
+the signal, write a small progress JSON polled through the API. Checkpoints at logical
+boundaries make jobs resumable and idempotent. Only settled statuses are stored —
+`stopped`, `done`, `error`, `killed`; an unsettled row reads `running` inside the claim TTL
+and `pending` outside it, so a dead worker's job needs no transition to be taken again. A
+job carries kind-specific metadata (an eval job, its aggregates), so one jobs interface
+shows every kind. Mechanism: `docs/decisions/0011-jobs-claimed-from-the-database.md`.
 Tables — `jobs`: id, kind, description, payload `jsonb`, checkpoint `jsonb`, progress
-`jsonb`, status, error, signal, claim_id `uuid` (nullable), claimed_at (nullable),
-created_at, updated_at, finished_at. `job_logs` (append-only): id, job_id, at, level,
-message, data `jsonb`. `extractor_jobs`: extractor_id, job_id, created_at — a query
-index written at spawn; the `extractor_id` in the job's payload is authoritative;
-system-owned jobs have no row here.
+`jsonb`, status (nullable until settled), error, signal, claim_id `uuid` (nullable),
+claimed_at (nullable), created_at, updated_at, finished_at. `job_logs` (append-only): id,
+job_id, at, level, message, data `jsonb`. `extractor_jobs`: extractor_id, job_id,
+created_at — a query index written at spawn; the `extractor_id` in the job's payload is
+authoritative; system-owned jobs have no row here.
 
 ## API
 
 ### REST
 
 The main communication protocol: resource-oriented, with an OpenAPI document the UI
-generates types from. Writes take and return whole values; a transport never defaults a
-missing client field — absent is an error or a declared optional. Every list is
-cursor-paginated: `after_id` + `limit`, with a `<sort_column, id>` pair as the cursor
-when a custom sort is applied. Domain errors map to status codes in one place: not
+generates types from. Writes take and return whole values; a batch or command route is a
+`POST` naming the operation. A transport never defaults a missing client field — absent is
+an error or a declared optional. Every list is cursor-paginated: `after_id` + `limit`, with
+`<sort_column, id>` as the cursor under a custom sort. Domain errors map to codes: not
 found → 404; validation → 422 carrying per-row messages in `details`; upstream model
 failure → 502; any other domain error → 400.
 
 - `POST /extractors`, `GET /extractors`, `GET /extractors/{id}`, `PUT /extractors/{id}`,
-  `DELETE /extractors/{id}` — the specimen and serving models are set through update; a
-  schema edit through update returns the migration job (202). `GET /extractors/{id}`
-  carries its datasets' and models' ids, names and lightweight data, so no nested
-  listing routes exist.
+  `DELETE /extractors/{id}` — update carries name, description, schema and both model
+  roles; `source_columns` is create-only. `GET /extractors/{id}` carries its datasets' and
+  models' ids, names and lightweight data, so no nested listing routes exist.
 - `POST /extractors/{id}/serve` — the serve path, what a client's production app calls:
   one `source_values` row in, its derived row out, through the serving model (neither
   role configured is a named 400). Unbatched. Spends model money with no privilege
@@ -134,21 +135,20 @@ failure → 502; any other domain error → 400.
 - `GET /datasets`, `POST /datasets` (extractor_id in the body), `PUT /datasets/{id}`
   (name, description), `POST /datasets/{id}/import` (appends rows from the passed file,
   best-effort with per-row rejections), `GET /datasets/{id}/rows`.
-- `PUT /rows` — batch upsert and delete: rows carry their dataset ids, values are
+- `POST /rows` — batch upsert and delete: rows carry their dataset ids, values are
   validated, and a row with `dead: true` is deleted.
 - `POST /models`, `GET /models/{id}`, `DELETE /models/{id}` — forking is a client-side
   GET + POST.
-- `GET /jobs`, `GET /jobs/{id}`, `PUT /jobs/{id}` (apply a signal: `stop`, `kill`,
-  `resume` — resume returns a `stopped` job to `pending`, checkpoint kept),
-  `GET /jobs/{id}/logs`.
+- `GET /jobs`, `GET /jobs/{id}`, `POST /jobs/{id}/signal` (`stop`, `kill`, `resume` —
+  resume clears the settled status and the claim, checkpoint kept), `GET /jobs/{id}/logs`.
 - `GET /evals` (filterable by extractor, model, dataset), `GET /evals/{id}`,
   `GET /evals/{id}/scores` — a read view over eval-kind jobs; ids are job ids.
 
 ### MCP
 
-An agent facade duplicating the REST functionality: one read-write endpoint, every
-tool mirroring a REST capability, the shared JSON representation, the same errors as
-tool errors. A read-only surface returns with the authorization model.
+An agent facade duplicating the REST functionality: one read-write endpoint at `/mcp` on
+the API port, every tool mirroring a REST capability, the shared JSON representation, the
+same errors as tool errors. A read-only surface returns with the authorization model.
 
 ## The dependency rule
 
@@ -184,12 +184,12 @@ new ADR.
 
 ## Configuration
 
-Environment variables, no product prefix: `API_PORT` (REST, default 8420), `MCP_PORT`
-(default 8421), `HOST` (default 127.0.0.1), `DATABASE_URL`, `OPENROUTER_API_KEY`
-(required), `EMBEDDING_API_KEY` + `EMBEDDING_MODEL` + `EMBEDDING_URL` (optional;
-without them the embedding metric fails an eval loudly). One process serves both
-transports and runs the job claimer; scaling workers means more claimer processes
-against the same database. `docker compose up` bootstraps Postgres and the app.
+Environment variables, no product prefix: `API_PORT` (default 8420), `HOST` (default
+0.0.0.0, so a published container port reaches the app), `DATABASE_URL`,
+`OPENROUTER_API_KEY` (required), `EMBEDDING_API_KEY` + `EMBEDDING_MODEL` + `EMBEDDING_URL`
+(optional; without them the embedding metric fails an eval loudly). One process serves both
+transports on `API_PORT` and runs the job claimer; scaling workers means more claimer
+processes against the same database. `docker compose up` bootstraps Postgres and the app.
 
 ## Postgres conventions
 
