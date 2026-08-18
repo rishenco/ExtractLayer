@@ -57,9 +57,8 @@ Ran `grep -q 'session-start.sh' scripts/gates/05-selftest.sh && ./scripts/gates/
 ## C9
 Claim: `README.md` names `work/<slug>/` as holding a plan and claims, `work/README.md` lists both files, the reviewer reads a plan only if one exists, and the plan template asks why the layer is not the neighbouring one.
 Evidence: `README.md:33`, `work/README.md:6-7`, `.claude/agents/adversarial-reviewer.md:10`, `.claude/skills/plan/SKILL.md:44`.
-Verify: `{ ! grep -q 'review for one change' README.md; } && grep -q 'claims.md' work/README.md && grep -q 'if one exists' .claude/agents/adversarial-reviewer.md && grep -q 'why not the neighbouring one' .claude/skills/plan/SKILL.md`
-Verdict: SUPPORTED
-Ran the compound command -> exit 0; the layout line reads `work/<slug>/      plan and claims for one change` at `README.md:32`, not the cited `:33`; `work/README.md:6-7` list `plan.md` and `claims.md`; `.claude/agents/adversarial-reviewer.md:10` reads `work/<slug>/plan.md` if one exists; `.claude/skills/plan/SKILL.md:44` asks why not the neighbouring one; deleting `if one exists` makes the command exit 1.
+Verify: `grep -q 'plan and claims for one change' README.md && grep -q 'claims.md' work/README.md && grep -q 'if one exists' .claude/agents/adversarial-reviewer.md && grep -q 'why not the neighbouring one' .claude/skills/plan/SKILL.md`
+Verdict:
 
 ## C10
 Claim: `docs/lessons.md` carries a rule on checking a layout block against its directory's README, and a rule on diffing a repointed reader clause by clause.
@@ -67,3 +66,9 @@ Evidence: `docs/lessons.md:24-25`.
 Verify: `[ "$(grep -cE "layout block naming a directory's contents|rename repoints a reader" docs/lessons.md)" -eq 2 ]`
 Verdict: SUPPORTED
 Ran the count -> 2, exit 0, matching `docs/lessons.md:24-25`; deleting line 25 drops the count to 1 and the test exits 1.
+
+## C11
+Claim: `.claude/agents/adversarial-reviewer.md` tells the reviewer how to judge a change that ships with no plan, and `work/merge-spec-into-plan/plan.md` carries one outcome note under each of its seven steps.
+Evidence: `.claude/agents/adversarial-reviewer.md:10`; the seven `- Done:` lines under the steps in `work/merge-spec-into-plan/plan.md`.
+Verify: `grep -q 'Skips-plan-gate' .claude/agents/adversarial-reviewer.md && [ "$(grep -c '^   - Done:' work/merge-spec-into-plan/plan.md)" -eq 7 ]`
+Verdict:

@@ -30,6 +30,7 @@ Objections: none.
 - `/spec` or `spec.md` is named at: `README.md:10`, `CLAUDE.md:5`, `AGENTS.md:17`, `docs/working.md:5`, `scripts/gates/70-approved-plan.sh:36`, `.claude/skills/spec/SKILL.md`, `.claude/skills/plan/SKILL.md:3`, `.claude/skills/build/SKILL.md:45`, `.claude/agents/adversarial-reviewer.md:10`, `.claude/agents/claim-auditor.md:34`, `.claude/hooks/session-start.sh:5` and `:14`, `work/README.md:6`, `.github/pull_request_template.md:5`.
 - `.claude/hooks/session-start.sh:13-17` reports a slug as `spec only, no plan`, a state that stops existing.
 - `work/` has no slug directories, so no historical record is rewritten.
+  - Correction from the build: `work/reconcile-skill/` and this directory both exist. Neither holds a `spec.md`, so the conclusion stands and nothing was rewritten.
 
 ## Approach
 
