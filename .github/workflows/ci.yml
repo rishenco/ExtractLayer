@@ -21,26 +21,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install workspaces
-        run: |
-          . scripts/lib/files.sh
-          el_workspaces | while IFS= read -r manifest; do
-            dir="$(dirname "$manifest")"
-            echo "installing $dir"
-            case "$(basename "$manifest")" in
-              pyproject.toml)
-                out="$(cd "$dir" && pip install -e '.[dev]' 2>&1)" || { printf '%s\n' "$out"; exit 1; }
-                printf '%s\n' "$out"
-                case "$out" in
-                  *"does not provide the extra"*)
-                    echo "$dir: no 'dev' extra — its lint, type and test tooling is not installed"
-                    exit 1
-                    ;;
-                esac
-                ;;
-              package.json) (cd "$dir" && npm ci) || exit 1 ;;
-            esac
-          done
-        shell: bash
+      - run: scripts/install-workspaces.sh
 
       - run: make check

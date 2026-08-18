@@ -7,7 +7,7 @@ flowchart TD
     rest["REST API — the main protocol"]
     mcp["MCP — agent facade over the same services"]
     es["extractor service: extractors, datasets, models, serve"]
-    js["job service: spawns jobs, claims pending ones, works them under a fenced lease"]
+    js["job service: spawns jobs, claims unleased ones, works them under a fenced lease"]
     rest --> es
     rest --> js
     mcp -.-> es
@@ -95,17 +95,17 @@ eval history survives the rows it scored being edited or deleted.
 drafting, system maintenance — a job need not belong to an extractor. A job is a database
 row a worker claims under a fenced lease and works with a ~2s tick: renew the claim, pull
 the signal, write a small progress JSON polled through the API. Checkpoints at logical
-boundaries make jobs resumable and idempotent. Only settled statuses are stored —
-`stopped`, `done`, `error`, `killed`; an unsettled row reads `running` inside the claim TTL
-and `pending` outside it, so a dead worker's job needs no transition to be taken again. A
-job carries kind-specific metadata (an eval job, its aggregates), so one jobs interface
-shows every kind. Mechanism: `docs/decisions/0011-jobs-claimed-from-the-database.md`.
+boundaries make jobs resumable and idempotent. Status is `running` from insert until it
+settles at `stopped`, `done`, `error` or `killed`; a `running` row is claimable while its
+`claimed_at` is null or past the claim TTL, so a dead worker's job needs no transition to
+be taken again. A job carries kind-specific metadata (an eval job, its aggregates), so one
+jobs interface shows every kind.
+Mechanism: `docs/decisions/0011-jobs-claimed-from-the-database.md`.
 Tables — `jobs`: id, kind, description, payload `jsonb`, checkpoint `jsonb`, progress
-`jsonb`, status (nullable until settled), error, signal, claim_id `uuid` (nullable),
-claimed_at (nullable), created_at, updated_at, finished_at. `job_logs` (append-only): id,
-job_id, at, level, message, data `jsonb`. `extractor_jobs`: extractor_id, job_id,
-created_at — a query index written at spawn; the `extractor_id` in the job's payload is
-authoritative; system-owned jobs have no row here.
+`jsonb`, status, error, signal, claim_id `uuid` (nullable), claimed_at (nullable),
+created_at, updated_at, finished_at. `job_logs` (append-only): id, job_id, at, level,
+message, data `jsonb`. `extractor_jobs`: extractor_id, job_id, created_at — a query index
+written at spawn; the payload's `extractor_id` is authoritative; system-owned jobs have none.
 
 ## API
 
@@ -140,7 +140,7 @@ failure → 502; any other domain error → 400.
 - `POST /models`, `GET /models/{id}`, `DELETE /models/{id}` — forking is a client-side
   GET + POST.
 - `GET /jobs`, `GET /jobs/{id}`, `POST /jobs/{id}/signal` (`stop`, `kill`, `resume` —
-  resume clears the settled status and the claim, checkpoint kept), `GET /jobs/{id}/logs`.
+  resume returns the row to `running`, claim cleared, checkpoint kept), `GET /jobs/{id}/logs`.
 - `GET /evals` (filterable by extractor, model, dataset), `GET /evals/{id}`,
   `GET /evals/{id}/scores` — a read view over eval-kind jobs; ids are job ids.
 
