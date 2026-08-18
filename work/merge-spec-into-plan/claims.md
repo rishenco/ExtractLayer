@@ -38,7 +38,7 @@ Claim: `make check` passes on this tree.
 Evidence: it prints `all gates pass` and exits 0.
 Verify: `make check`
 Verdict: SUPPORTED
-Ran `make check` twice: on the tree as received, with all ten `Verdict:` lines blank, it printed `FAIL 75-claims` / `work/merge-spec-into-plan/claims.md: 10 claims but 0 verdicts` and exited 2; with these ten verdicts recorded it prints `all gates pass` and exits 0, every other gate reporting `ok` on both runs.
+Ran `make check` twice: on the tree as received, with the C9 and C11 verdicts blank, it printed `FAIL 75-claims` / `work/merge-spec-into-plan/claims.md: 11 claims but 9 verdicts` and exited 2; with all eleven verdicts recorded it prints `all gates pass` and exits 0, every other gate reporting `ok` on both runs.
 
 ## C7
 Claim: `CHANGELOG.md` describes the loop as plan → build → compound with one approved document per change, and names no spec anywhere.
@@ -58,7 +58,8 @@ Ran `grep -q 'session-start.sh' scripts/gates/05-selftest.sh && ./scripts/gates/
 Claim: `README.md` names `work/<slug>/` as holding a plan and claims, `work/README.md` lists both files, the reviewer reads a plan only if one exists, and the plan template asks why the layer is not the neighbouring one.
 Evidence: `README.md:33`, `work/README.md:6-7`, `.claude/agents/adversarial-reviewer.md:10`, `.claude/skills/plan/SKILL.md:44`.
 Verify: `grep -q 'plan and claims for one change' README.md && grep -q 'claims.md' work/README.md && grep -q 'if one exists' .claude/agents/adversarial-reviewer.md && grep -q 'why not the neighbouring one' .claude/skills/plan/SKILL.md`
-Verdict:
+Verdict: SUPPORTED
+Ran the four-part grep -> exit 0: the layout line `work/<slug>/      plan and claims for one change` is the phrase's only occurrence and sits at `README.md:32`, not the cited `:33`, which is the `scripts/gates/` line; `work/README.md:6-7` name `plan.md` and `claims.md`; `.claude/agents/adversarial-reviewer.md:10` reads the plan `if one exists`; `.claude/skills/plan/SKILL.md:44` asks why not the neighbouring layer; rewording each of the four in turn makes the command exit 1.
 
 ## C10
 Claim: `docs/lessons.md` carries a rule on checking a layout block against its directory's README, and a rule on diffing a repointed reader clause by clause.
@@ -71,4 +72,5 @@ Ran the count -> 2, exit 0, matching `docs/lessons.md:24-25`; deleting line 25 d
 Claim: `.claude/agents/adversarial-reviewer.md` tells the reviewer how to judge a change that ships with no plan, and `work/merge-spec-into-plan/plan.md` carries one outcome note under each of its seven steps.
 Evidence: `.claude/agents/adversarial-reviewer.md:10`; the seven `- Done:` lines under the steps in `work/merge-spec-into-plan/plan.md`.
 Verify: `grep -q 'Skips-plan-gate' .claude/agents/adversarial-reviewer.md && [ "$(grep -c '^   - Done:' work/merge-spec-into-plan/plan.md)" -eq 7 ]`
-Verdict:
+Verdict: SUPPORTED
+Ran the compound command -> exit 0: `.claude/agents/adversarial-reviewer.md:10` sends a change shipped under a `Skips-plan-gate:` trailer to `AGENTS.md` alone, and the seven steps at `work/merge-spec-into-plan/plan.md:43,45,47,49,51,53,55` each carry one `- Done:` line directly beneath, at `:44,46,48,50,52,54,56`; renaming the trailer exits 1, and retitling one `- Done:` drops the count to 6 and exits 1.
