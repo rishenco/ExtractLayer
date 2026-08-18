@@ -289,6 +289,12 @@ changed "docs/architecture.md"
 EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
   expect 75-claims.sh 0 "docs-only change needs no ledger"
 
+: >"$WORK/empty"
+if ! EL_FILE_LIST="$WORK/empty" bash -eo pipefail -c '. scripts/lib/files.sh; el_workspaces' >/dev/null 2>&1; then
+  found=1
+  echo "el_workspaces: exits non-zero under 'set -e -o pipefail' when no workspace exists"
+fi
+
 [ "$found" -eq 0 ] && exit 0
 echo
 echo "A gate that stopped firing reports success it cannot back."

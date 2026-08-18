@@ -51,7 +51,7 @@ el_workspaces() {
   el_repo_files \
     | grep -E '(^|/)(package\.json|go\.mod|pyproject\.toml)$' \
     | grep -vE "$EL_SKIP_DIRS" \
-    | sort -u
+    | sort -u || true
 }
 
 EL_TRAILER='Skips-plan-gate:'
