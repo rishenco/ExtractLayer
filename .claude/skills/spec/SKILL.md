@@ -10,13 +10,9 @@ Capture intent before anything is built. No code in this step.
 
 Read `docs/vision.md` and `docs/lessons.md`. If the request contradicts either, say so now.
 
-Judge the request itself. If it is the wrong solution to the problem behind it, name the
-problem you think they actually have and propose the alternative in one paragraph. Do this
-before writing the spec, not inside it. Then build what the human decides — but a request you
-believed was wrong and built anyway is a defect you own.
+Judge the request itself. If it is the wrong solution to the problem behind it, name the problem you think they actually have and propose the alternative in one paragraph. Do this before writing the spec, not inside it. Then build what the human decides — but a request you believed was wrong and built anyway is a defect you own.
 
-Ask up to three questions, and only ones whose answers change what gets built. If the human is
-not reachable, every unasked question goes to **Open questions**.
+Ask up to three questions, and only ones whose answers change what gets built. If the human is not reachable, every unasked question goes to **Open questions**.
 
 ## Write
 
@@ -52,12 +48,10 @@ What you argued against and what was decided. "None" is an answer.
 
 ## Rules
 
-- An acceptance criterion that cannot be proven by a test, a gate, or a command someone runs
-  is not a criterion — rewrite it until it can be, or move it to Non-goals.
+- An acceptance criterion that cannot be proven by a test, a gate, or a command someone runs is not a criterion — rewrite it until it can be, or move it to Non-goals.
 - "Works correctly", "is performant", "handles errors gracefully" are not criteria.
 - Three vague criteria are worth less than one exact one.
-- A spec records decisions as requirements — "X, because Y", never a transcript of who said
-  what or when. **Objections** is the one section that keeps the argument itself.
+- A spec records decisions as requirements — "X, because Y", never a transcript of who said what or when. **Objections** is the one section that keeps the argument itself.
 - Do not describe implementation. That is `/plan`.
 
 End by telling the human the spec is ready and what you need from them. Then `/plan <slug>`.
