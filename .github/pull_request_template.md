@@ -2,8 +2,7 @@
 
 <!-- One paragraph: what is different for the user. Link the spec and plan. -->
 
-Spec: `work/<slug>/spec.md`
-Plan: `work/<slug>/plan.md`
+Spec: `work/<slug>/spec.md` Plan: `work/<slug>/plan.md`
 
 ## Acceptance criteria
 
