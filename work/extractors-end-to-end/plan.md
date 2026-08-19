@@ -1,6 +1,6 @@
 # Extractors end to end
 
-Status: Draft
+Status: Approved
 
 ## Problem / Intent
 
