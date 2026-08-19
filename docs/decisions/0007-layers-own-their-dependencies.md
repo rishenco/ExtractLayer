@@ -12,7 +12,7 @@ The workspace is the repository root; the package is `extractlayer`. Layer direc
 
 Layers glue through `typing.Protocol`: every cross-layer interface is a structural protocol, satisfied by shape and checked by mypy — no ABCs, no inheritance, no runtime registration, no import from implementation to interface.
 
-Consumers own their dependencies. `service.dependencies` declares the repositories, the model client and the embedding client that services consume. `transport.dependencies` declares the service interfaces the transport drives. `repo` implements `service.dependencies` structurally, importing nothing from it.
+Consumers own their dependencies, declared in the file that consumes them rather than in a module of their own: a service declares the repository, model client or embedding client it needs beside itself, and a transport declares the service interfaces it drives beside itself. A protocol earns a module when a second file consumes it. `repo` implements the protocols `service` declares, structurally, importing nothing from them.
 
 `domain` holds entities, their invariants and the schema's structure. Metric kinds, their configuration in `x-el` and the scoring engine are `service`.
 
@@ -22,6 +22,6 @@ One import-linter contract enforces it: `transport`, `service` and `repo` are si
 
 A service can be read without leaving its layer: the interfaces it needs are declared beside it. Swapping an adapter touches the composition root only, and a test double satisfies a dependency by shape rather than by inheritance.
 
-The cost is duplication by design: two layers that need the same collaborator declare it twice, and a change to a service signature changes `transport.dependencies` as well. That is the price of the sibling rule, which is what keeps the layers substitutable.
+The cost is duplication by design: two layers that need the same collaborator declare it twice, and a change to a service signature changes the protocol the transport declares as well. That is the price of the sibling rule, which is what keeps the layers substitutable.
 
 Nothing outside the composition root can reach `repo`, so accidental coupling to the store or to OpenRouter fails `pytest` rather than review.

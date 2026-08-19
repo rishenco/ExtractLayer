@@ -137,6 +137,12 @@ building all entities at one layer at a time, which leaves no working product un
    `docs/decisions/0007-layers-own-their-dependencies.md`,
    `tests/test_extractor_service.py` — proves it: `pytest -q tests/test_extractor_service.py`.
    (A6, A8, A9)
+   - Done: `ExtractorService` declares `ExtractorRepo` as a `Protocol` beside itself, raises
+     `NotFoundError` and `ValidationError` only, and takes no `source_columns` on update, so the
+     created list survives an edit. Tests drive the real `PostgresExtractorRepo`, since ADR 0010
+     puts tests on Postgres rather than a substitute. Amended the layer table, ADR 0007 and
+     ADR 0009 off the `dependencies` modules; `grep -rn 'repo/migrations\|\.dependencies' docs/`
+     is now empty.
 5. Transport — files: `extractlayer/transport/dto.py`, `transport/errors.py`,
    `transport/http.py`, `extractlayer/main.py`, `tests/test_http.py` — proves it:
    `pytest -q tests/test_http.py`. (A4, A5, A6, A7, A8)
