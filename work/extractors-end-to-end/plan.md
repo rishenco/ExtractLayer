@@ -113,6 +113,12 @@ building all entities at one layer at a time, which leaves no working product un
      no file-length or no-comments rule to replace them — the floor Python loses is real.
 2. Domain — files: `extractlayer/domain/errors.py`, `domain/schema.py`, `domain/extractor.py`,
    `tests/test_schema.py` — proves it: `pytest -q tests/test_schema.py`. (A3, A9)
+   - Done: `ExtractorSchema.parse` rejects a non-object schema, a non-`object` type, an empty
+     `properties`, a schema `Draft202012Validator.check_schema` refuses, and an unknown `x-el`
+     key — each naming the path that failed. `ExtractorSchema.edited` re-parses and refuses a
+     changed column type. Found: the rules are load-bearing — dropping the empty-properties,
+     type-change and unknown-key checks in turn fails 3, 1 and 2 tests. Found: `jsonschema`
+     ships no `py.typed`, so `types-jsonschema` joins the `dev` extra.
 3. Store and migrations — files: `extractlayer/config.py`, `repo/postgres.py`,
    `extractlayer/migrations/0001-extractors.sql`, `repo/extractors.py`, `docker-compose.yml`,
    `.github/workflows/ci.yml`, `docs/decisions/0008-migrations-with-yoyo.md`,
