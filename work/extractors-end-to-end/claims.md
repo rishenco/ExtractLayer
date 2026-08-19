@@ -44,13 +44,13 @@ Verdict: SUPPORTED
 Claim: a `NotFoundError` becomes a 404 on `GET`, `PUT` and `DELETE` alike, and a domain `ValidationError` becomes a 422 carrying the domain's own `details`, decided by the error's type in one handler rather than by any route.
 Evidence: `tests/test_http.py:139` asserts 404 on all three routes; `tests/test_http.py:150` asserts the 422 carries `schema.properties`; `extractlayer/transport/errors.py:50` registers the one handler for `DomainError`, and the five routes at `extractlayer/transport/http.py:44`, `:51`, `:59`, `:63` and `:70` catch nothing.
 Verify: pytest -q tests/test_http.py -k "404 or validation_error"
-Verdict:
+Verdict: SUPPORTED
 
 ## C9
 Claim: a schema edit changing a kept column's type is refused at the domain, the service and over REST — for a flat column, for an array's element type, for an object column's nested property and for an enum's value type — while adding and removing columns, widening an enum within one value type, and editing a description or metric config all succeed.
 Evidence: at the domain `tests/test_schema.py:81` (flat), `:98` (array element), `:112` (nested property) and `:130` (enum value type) refuse, while `:140`, `:152`, `:172` and `:189` succeed; at the service `tests/test_extractor_service.py:59` refuses with the stored schema asserted unchanged and `:70` succeeds; over REST `tests/test_http.py:158` and `:173` refuse.
 Verify: pytest -q tests/test_schema.py tests/test_extractor_service.py tests/test_http.py
-Verdict:
+Verdict: SUPPORTED
 
 ## C10
 Claim: the migrations build `extractlayer.extractors` with its seven columns from an empty database, and applying them a second time leaves one recorded migration and no error.
