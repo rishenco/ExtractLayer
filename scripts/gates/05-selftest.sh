@@ -285,6 +285,46 @@ changed "ui/src/thing.ts" "$WORK/work/cl5/claims.md"
 EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
   expect 75-claims.sh 1 "prose with no claim blocks"
 
+add_file work/cl6/claims.md '## C1
+Claim: make check passes.
+Evidence: with this ledger unwritten, every other gate reported ok.
+Verify: make check
+Verdict: SUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl6/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "evidence that describes the ledger rather than the tree blocks"
+
+add_file work/cl7/claims.md '## C1
+Claim: make check passes.
+Evidence: make check prints all gates pass and exits 0.
+Verify: make check
+Verdict: SUPPORTED
+
+Verified: I reran it and it passed.'
+changed "ui/src/thing.ts" "$WORK/work/cl7/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "a line outside the claim blocks blocks"
+
+add_file work/cl8/claims.md 'Six claims were re-audited after the review.
+
+## C1
+Claim: make check passes.
+Evidence: make check prints all gates pass and exits 0.
+Verify: make check
+Verdict: SUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl8/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "a preamble blocks"
+
+add_file work/cl9/claims.md '## C1
+Claim: make check passes.
+Evidence: make check prints all gates pass and exits 0.
+Verify: make check
+Verdict: SUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl9/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 0 "a ledger of nothing but claim blocks and verdicts passes"
+
 changed "docs/architecture.md"
 EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
   expect 75-claims.sh 0 "docs-only change needs no ledger"

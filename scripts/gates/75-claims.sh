@@ -41,7 +41,18 @@ while IFS= read -r ledger; do
   verdicts="$(grep -cE '^Verdict:[[:space:]]*(SUPPORTED|UNSUPPORTED|FALSE)[[:space:]]*$' "$ledger" || true)"
   bad="$(grep -nE '^Verdict:[[:space:]]*(UNSUPPORTED|FALSE)[[:space:]]*$' "$ledger" || true)"
 
+  stray="$(grep -nvE '^(## C[0-9]+|Claim:|Evidence:|Verify:|Verdict:)' "$ledger" | grep -vE '^[0-9]+:$' || true)"
+  selfref="$(grep -nE '^Evidence:.*(this ledger|this file|passes once|once the audit|after the audit)' "$ledger" || true)"
+
   [ "$claims" -eq 0 ] && { found=1; echo "$ledger: no claims, so nothing was audited"; continue; }
+  [ -n "$stray" ] && {
+    found=1
+    printf '%s\n' "$stray" | sed "s|^|$ledger: not part of a claim block: |"
+  }
+  [ -n "$selfref" ] && {
+    found=1
+    printf '%s\n' "$selfref" | sed "s|^|$ledger: evidence describes the ledger, not the tree: |"
+  }
   [ "$verdicts" -ne "$claims" ] && {
     found=1
     echo "$ledger: $claims claims but $verdicts verdicts — the audit did not finish"
@@ -55,4 +66,5 @@ done <<<"$ledgers"
 [ "$found" -eq 0 ] && exit 0
 echo
 echo "Fix what is false, or withdraw the claim. A claim nobody could reproduce does not ship."
+echo "A ledger is claim blocks and verdicts; evidence points at the tree, not at the ledger."
 exit 1
