@@ -11,15 +11,10 @@ including whether the layer map, the Postgres conventions and the gate suite can
 Afterwards: a running Python service with four layers wired at a composition root, Postgres
 behind numbered migrations, and one entity — Extractor — reachable end to end over REST.
 `docker compose up` on a fresh clone reaches a serving app. The one-time cost of the first
-Python workspace is paid here, so the changes after this one add capability, not tooling.
+Python workspace is paid here, the first of four changes carrying the core logic; the three
+after it add capability, not tooling.
 
-Objections:
-
-- The request covered every entity, both transports and the job substrate in one change. That
-  exceeds what a plan gate can review, so the work is four changes; this is change 1 of 4.
-- Faking the job substrate would build ADR 0011 twice. The substrate is built for real, with
-  fake job kinds, in change 3.
-- MCP mirrors a REST surface that has not settled. It lands in change 4, written once.
+Objections: none.
 
 ## Criteria
 
