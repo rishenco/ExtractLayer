@@ -126,6 +126,13 @@ building all entities at one layer at a time, which leaves no working product un
    `tests/test_extractors_repo.py` — proves it:
    `pytest -q tests/test_extractors_repo.py`, which applies migrations twice from an empty
    database and walks a seeded page set. (A10, A4, A5)
+   - Done: `0001-extractors.sql` creates the `extractlayer` schema and the table; migrations run
+     over yoyo's `postgresql+psycopg` backend, so the risk that it might be absent is closed and
+     no `psycopg2-binary` is installed. `tests/conftest.py` creates and drops a database per
+     test, so every run starts empty. Found: `yoyo` ships no `py.typed`, and no stub package
+     exists, so `pyproject.toml` carries a module override for it rather than a blanket relax.
+     Found: `docs/decisions/0009-transport.md` also cites `transport.dependencies`, which the
+     plan named only in ADR 0007 and the architecture — it is amended with them in step 4.
 4. Service — files: `extractlayer/service/extractors.py`, `docs/architecture.md`,
    `docs/decisions/0007-layers-own-their-dependencies.md`,
    `tests/test_extractor_service.py` — proves it: `pytest -q tests/test_extractor_service.py`.

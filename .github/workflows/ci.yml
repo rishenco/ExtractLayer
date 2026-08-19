@@ -8,6 +8,25 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: extractlayer
+          POSTGRES_PASSWORD: extractlayer
+          POSTGRES_DB: extractlayer
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U extractlayer -d extractlayer"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://extractlayer:extractlayer@127.0.0.1:5432/extractlayer
+
     steps:
       - uses: actions/checkout@v4
         with:
