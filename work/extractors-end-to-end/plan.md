@@ -18,27 +18,29 @@ Objections: none.
 
 ## Criteria
 
-- [ ] A1 `make check` passes with the workspace present: every gate, plus `ruff`, `mypy` and
+- [x] A1 (C1) `make check` passes with the workspace present: every gate, plus `ruff`, `mypy` and
       `pytest`.
-- [ ] A2 The layer map is enforced, not described: a `service` module importing `repo` makes
+- [x] A2 (C2) The layer map is enforced, not described: a `service` module importing `repo` makes
       `pytest` fail, and the same test passes on the real tree.
-- [ ] A3 Schema validation holds the domain rule: a non-object schema, an object with no
+- [x] A3 (C3) Schema validation holds the domain rule: a non-object schema, an object with no
       properties, and an unknown `x-el` key are each rejected by name; a draft 2020-12 object
       carrying `x-el` metric config on a column and on an array's `items` is accepted.
-- [ ] A4 Extractor CRUD round-trips over REST against Postgres: `POST` then `GET /{id}` returns
+- [x] A4 (C4) Extractor CRUD round-trips over REST against Postgres: `POST` then `GET /{id}` returns
       what was stored, `PUT` updates name, description and schema, `DELETE` makes the next
       `GET` a 404.
-- [ ] A5 `GET /extractors` is cursor-paginated: `after_id` plus `limit` walks a seeded set once,
+- [x] A5 (C5) `GET /extractors` is cursor-paginated: `after_id` plus `limit` walks a seeded set once,
       no row repeated, none skipped.
-- [ ] A6 `source_columns` is create-only: a `PUT` carrying it is rejected, not ignored.
-- [ ] A7 No transport field is defaulted: a write missing a required field is a 422 carrying
+- [x] A6 (C6) `source_columns` is create-only: a `PUT` carrying it is rejected, not ignored.
+- [x] A7 (C7) No transport field is defaulted: a write missing a required field is a 422 carrying
       per-field messages in `details`.
-- [ ] A8 Domain errors map to codes at the transport edge from the error type, not per route:
+- [x] A8 (C8) Domain errors map to codes at the transport edge from the error type, not per route:
       not found to 404, validation to 422.
-- [ ] A9 A schema edit that changes a column's type is refused; adding and removing columns
+- [x] A9 (C9) A schema edit that changes a column's type is refused; adding and removing columns
       succeeds.
-- [ ] A10 Migrations build the schema from an empty database and are safe to re-run.
+- [x] A10 (C10) Migrations build the schema from an empty database and are safe to re-run.
 - [ ] A11 `docker compose up` reaches a serving app: `GET /openapi.json` returns the document.
+      Not ticked: C11 settles the compose file and C12 the serving app, and no Docker daemon
+      runs here to settle the two together.
 
 ## Not doing
 
@@ -154,6 +156,16 @@ building all entities at one layer at a time, which leaves no working product un
      catches anything. `extractlayer.main` joins the layers contract with the module.
 6. Bootstrap — files: `Dockerfile`, `docker-compose.yml` — proves it: `docker compose up -d`
    then `curl -fsS localhost:8420/openapi.json`. (A11)
+   - Done: `Dockerfile` installs the package and runs `python -m extractlayer.main`; compose adds
+     the app beside the database and waits on its health check. Contradicts the plan in what can
+     be checked here, not in what was built: no Docker daemon runs in this environment, so
+     `docker compose up -d` cannot execute. `docker compose config` resolves both services, and
+     the app itself was started against an empty database over `python -m extractlayer.main`,
+     which applied the migration, served `GET /openapi.json`, round-tripped a `POST` and `GET`
+     and answered 404 for an absent id. Added `tests/test_bootstrap.py`, outside the plan's file
+     list and inside its intent, so the composition root serving `GET /openapi.json` from an
+     empty database is checked by `make check` rather than observed once. The image build and
+     the compose run stay unverified and are claimed as nothing.
 
 ## Risks & open
 
@@ -173,6 +185,10 @@ building all entities at one layer at a time, which leaves no working product un
   phrase list in `30-slop.sh` stays. ADR 0003 says a config file does not stand in for a check
   that runs; installing Vale in CI and retiring the phrase list is its own change. Assumption
   taken: add the config, keep the phrase list, and leave the debt named here.
+- No Docker daemon runs in the build environment, so A11's `docker compose up -d` was not
+  executed. `docker compose config` and a real uvicorn run against an empty database cover the
+  app and the compose file separately; the image build and the two containers together are
+  unverified until CI or a human runs them.
 - `OPENROUTER_API_KEY` is listed as required configuration in `docs/architecture.md`, and no
   model client exists yet. Assumption taken: it is not validated at startup until the client
   that needs it lands, and the architecture document is left unedited because it describes the
