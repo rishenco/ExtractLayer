@@ -1,18 +1,18 @@
 ## C1
 Claim: `make check` passes — every gate in `scripts/gates/` reports ok, including `ruff check .`, `mypy .` and `pytest -q` through `60-workspaces`.
-Evidence: with this ledger unwritten, 11 gates reported ok and `75-claims` was the only failure; `75-claims` reads this file and passes once every `Verdict:` below is recorded.
+Evidence: `make check` prints `all gates pass` and exits 0.
 Verify: make check
 Verdict:
 
 ## C2
-Claim: `lint-imports` passes on the tree as it stands and fails when a `service` module imports `repo`, naming both the contract and the import chain.
-Evidence: `tests/test_boundaries.py:34` runs it on the real tree; `tests/test_boundaries.py:40` writes `extractlayer/service/probe.py` importing `extractlayer.repo`, asserts a non-zero exit, and asserts the output carries "Dependencies point inward" and "extractlayer.service.probe -> extractlayer.repo".
+Claim: `lint-imports` passes on the tree as it stands, and fails naming the contract and the chain when a `service` module imports `repo` or a `domain` module imports `config`.
+Evidence: `tests/test_boundaries.py:44` runs it on the real tree; `:50` writes `extractlayer/service/probe.py` importing `extractlayer.repo` and `:58` writes `extractlayer/domain/probe.py` importing `extractlayer.config`, each asserting a non-zero exit and the output naming "Dependencies point inward" and the offending chain.
 Verify: pytest -q tests/test_boundaries.py
 Verdict:
 
 ## C3
 Claim: `ExtractorSchema.parse` rejects a non-object schema, an object with no properties and an unknown `x-el` key, each naming the path that failed, and accepts a draft 2020-12 object carrying `x-el` metric config on a column and on an array's `items`.
-Evidence: `tests/test_schema.py:22` accepts the object carrying both metric positions; `tests/test_schema.py:29`, `:43` and `:49` assert the three rejections and the detail key each carries, and `:59` the same key on an array's `items`.
+Evidence: `tests/test_schema.py:22` accepts the object carrying both metric positions; `:29`, `:43` and `:49` assert the three rejections and the detail key each carries, and `:59` the same key on an array's `items`.
 Verify: pytest -q tests/test_schema.py
 Verdict:
 
@@ -47,8 +47,8 @@ Verify: pytest -q tests/test_http.py -k "404 or validation_error"
 Verdict:
 
 ## C9
-Claim: a schema edit changing a column's type is refused at the domain, the service and over REST, and an edit that adds and removes columns succeeds.
-Evidence: `tests/test_schema.py:81` and `:97` at the domain, `tests/test_extractor_service.py:68` and `:79` at the service with the stored schema asserted unchanged after the refusal, `tests/test_http.py:158` over REST.
+Claim: a schema edit changing a kept column's type is refused at the domain, the service and over REST — for a flat column, for an array's element type, for an object column's nested property and for an enum's value type — while adding and removing columns, widening an enum within one value type, and editing a description or metric config all succeed.
+Evidence: at the domain `tests/test_schema.py:81` (flat), `:98` (array element), `:112` (nested property) and `:130` (enum value type) refuse, while `:140`, `:152`, `:172` and `:189` succeed; at the service `tests/test_extractor_service.py:59` refuses with the stored schema asserted unchanged and `:70` succeeds; over REST `tests/test_http.py:158` and `:173` refuse.
 Verify: pytest -q tests/test_schema.py tests/test_extractor_service.py tests/test_http.py -k "type or adding"
 Verdict:
 

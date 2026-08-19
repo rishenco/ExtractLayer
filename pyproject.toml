@@ -85,6 +85,6 @@ name = "Dependencies point inward"
 type = "layers"
 layers = [
     "extractlayer.main",
-    "extractlayer.transport | extractlayer.service | extractlayer.repo",
+    "extractlayer.transport | extractlayer.service | extractlayer.repo | extractlayer.config",
     "extractlayer.domain",
 ]

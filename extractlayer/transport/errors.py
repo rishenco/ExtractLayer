@@ -4,16 +4,17 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
+from starlette.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_CONTENT,
+)
 
 from extractlayer.domain.errors import DomainError, NotFoundError, ValidationError
 
-NOT_FOUND = 404
-UNPROCESSABLE = 422
-OTHER_DOMAIN_ERROR = 400
-
 STATUS_BY_ERROR: tuple[tuple[type[DomainError], int], ...] = (
-    (NotFoundError, NOT_FOUND),
-    (ValidationError, UNPROCESSABLE),
+    (NotFoundError, HTTP_404_NOT_FOUND),
+    (ValidationError, HTTP_422_UNPROCESSABLE_CONTENT),
 )
 
 
@@ -21,7 +22,7 @@ def status_for(error: DomainError) -> int:
     for error_type, status in STATUS_BY_ERROR:
         if isinstance(error, error_type):
             return status
-    return OTHER_DOMAIN_ERROR
+    return HTTP_400_BAD_REQUEST
 
 
 async def domain_error_response(_request: Request, error: Exception) -> JSONResponse:
@@ -40,7 +41,7 @@ async def request_error_response(_request: Request, error: Exception) -> JSONRes
         path = ".".join(str(part) for part in entry["loc"] if part not in ("body", "query"))
         details[path or "body"] = entry["msg"]
     return JSONResponse(
-        status_code=UNPROCESSABLE,
+        status_code=HTTP_422_UNPROCESSABLE_CONTENT,
         content={"error": "the request does not match the API", "details": details},
     )
 

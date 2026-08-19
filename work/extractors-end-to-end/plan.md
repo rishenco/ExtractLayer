@@ -121,6 +121,11 @@ building all entities at one layer at a time, which leaves no working product un
      changed column type. Found: the rules are load-bearing — dropping the empty-properties,
      type-change and unknown-key checks in turn fails 3, 1 and 2 tests. Found: `jsonschema`
      ships no `py.typed`, so `types-jsonschema` joins the `dev` extra.
+   - Found in review: that refusal compared only a column's top-level `type`, so an array
+     column's element type, an object column's nested property and an enum's value type could
+     each be edited freely while the flat equivalent was refused. `_type_shape` now reads the
+     column recursively; the three cases fail the suite against the old comparison and pass
+     against the new one, at the domain and over REST.
 3. Store and migrations — files: `extractlayer/config.py`, `repo/postgres.py`,
    `extractlayer/migrations/0001-extractors.sql`, `repo/extractors.py`, `docker-compose.yml`,
    `.github/workflows/ci.yml`, `docs/decisions/0008-migrations-with-yoyo.md`,
@@ -193,6 +198,11 @@ building all entities at one layer at a time, which leaves no working product un
   model client exists yet. Assumption taken: it is not validated at startup until the client
   that needs it lands, and the architecture document is left unedited because it describes the
   design rather than one change. Reversible in either direction in change 2.
+- "A type change is refused" (A9) needed a reading, because a column's content may be non-flat.
+  Taken: two versions of a kept column differ in type when their type shape differs, where the
+  shape is `type`, `const`, `enum` value types, `items`, `prefixItems` and `properties` read
+  recursively. Annotations, constraints and `x-el` are not part of it, so editing a description
+  or a metric is not a type change. Reversible by narrowing or widening `_type_shape`.
 - `limit` is required and bounded below at 1, with no upper bound: no document sets a maximum
   page size, and a cap is a policy nobody has chosen. Assumption taken: reject a meaningless
   limit, let a large one through, and leave the cap to the change that adds authorization.

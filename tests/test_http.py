@@ -165,9 +165,35 @@ async def test_a_schema_edit_changing_a_column_type_is_refused_over_rest(
         json={"name": "Invoices", "description": "line items", "schema": changed},
     )
     assert response.status_code == UNPROCESSABLE
-    assert "cannot change from 'number' to 'string'" in (
+    assert 'cannot change from {"type": "number"} to {"type": "string"}' in (
         response.json()["details"]["schema.properties.total.type"]
     )
+
+
+async def test_a_schema_edit_changing_an_array_element_type_is_refused_over_rest(
+    client: AsyncClient,
+) -> None:
+    created = (
+        await client.post(
+            "/extractors",
+            json=body(
+                schema={
+                    "type": "object",
+                    "properties": {"lines": {"type": "array", "items": {"type": "string"}}},
+                }
+            ),
+        )
+    ).json()
+    changed: dict[str, Any] = {
+        "type": "object",
+        "properties": {"lines": {"type": "array", "items": {"type": "number"}}},
+    }
+    response = await client.put(
+        f"/extractors/{created['id']}",
+        json={"name": "Invoices", "description": "line items", "schema": changed},
+    )
+    assert response.status_code == UNPROCESSABLE
+    assert "schema.properties.lines.type" in response.json()["details"]
 
 
 async def test_the_openapi_document_names_the_schema_field(client: AsyncClient) -> None:

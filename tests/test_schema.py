@@ -89,9 +89,101 @@ def test_an_edit_changing_a_column_type_is_refused() -> None:
     }
     with pytest.raises(ValidationError) as raised:
         ExtractorSchema.edited(previous, document)
-    assert "cannot change from 'number' to 'string'" in (
-        raised.value.details["schema.properties.total.type"]
+    assert raised.value.details["schema.properties.total.type"] == (
+        'cannot change from {"type": "number"} to {"type": "string"};'
+        " a schema edit adds and removes columns only"
     )
+
+
+def test_an_edit_changing_an_array_column_element_type_is_refused() -> None:
+    previous = ExtractorSchema.parse(INVOICE)
+    document = {
+        "type": "object",
+        "properties": {
+            "total": {"type": "number"},
+            "lines": {"type": "array", "items": {"type": "number"}},
+        },
+    }
+    with pytest.raises(ValidationError) as raised:
+        ExtractorSchema.edited(previous, document)
+    assert "schema.properties.lines.type" in raised.value.details
+
+
+def test_an_edit_changing_a_nested_property_type_is_refused() -> None:
+    previous = ExtractorSchema.parse(
+        {
+            "type": "object",
+            "properties": {
+                "seller": {"type": "object", "properties": {"vat": {"type": "string"}}}
+            },
+        }
+    )
+    document = {
+        "type": "object",
+        "properties": {"seller": {"type": "object", "properties": {"vat": {"type": "number"}}}},
+    }
+    with pytest.raises(ValidationError) as raised:
+        ExtractorSchema.edited(previous, document)
+    assert "schema.properties.seller.type" in raised.value.details
+
+
+def test_an_edit_changing_the_value_type_of_an_enum_column_is_refused() -> None:
+    previous = ExtractorSchema.parse(
+        {"type": "object", "properties": {"status": {"enum": ["draft", "sent"]}}}
+    )
+    document = {"type": "object", "properties": {"status": {"enum": [1, 2]}}}
+    with pytest.raises(ValidationError) as raised:
+        ExtractorSchema.edited(previous, document)
+    assert "schema.properties.status.type" in raised.value.details
+
+
+def test_an_edit_widening_an_enum_within_one_value_type_succeeds() -> None:
+    previous = ExtractorSchema.parse(
+        {"type": "object", "properties": {"status": {"enum": ["draft", "sent"]}}}
+    )
+    document = {"type": "object", "properties": {"status": {"enum": ["draft", "sent", "void"]}}}
+    assert ExtractorSchema.edited(previous, document).columns["status"]["enum"] == [
+        "draft",
+        "sent",
+        "void",
+    ]
+
+
+def test_a_single_entry_type_list_is_the_same_type_as_the_bare_name() -> None:
+    previous = ExtractorSchema.parse(
+        {"type": "object", "properties": {"total": {"type": ["number"]}}}
+    )
+    document = {"type": "object", "properties": {"total": {"type": "number"}}}
+    assert ExtractorSchema.edited(previous, document).columns["total"]["type"] == "number"
+
+
+def test_a_refused_multi_type_change_reports_json_not_a_python_tuple() -> None:
+    previous = ExtractorSchema.parse(
+        {"type": "object", "properties": {"total": {"type": ["string", "null"]}}}
+    )
+    document = {"type": "object", "properties": {"total": {"type": "number"}}}
+    with pytest.raises(ValidationError) as raised:
+        ExtractorSchema.edited(previous, document)
+    message = raised.value.details["schema.properties.total.type"]
+    assert 'cannot change from {"type": ["null", "string"]} to {"type": "number"}' in message
+    assert "(" not in message
+
+
+def test_an_edit_changing_only_metric_config_and_description_succeeds() -> None:
+    previous = ExtractorSchema.parse(INVOICE)
+    document = {
+        "type": "object",
+        "properties": {
+            "total": {"type": "number", "description": "gross", "x-el": {"metric": "exact"}},
+            "lines": {
+                "type": "array",
+                "items": {"type": "string", "x-el": {"metric": "exact"}},
+                "x-el": {"metric": "ordered_array"},
+            },
+        },
+    }
+    edited = ExtractorSchema.edited(previous, document)
+    assert edited.columns["lines"]["x-el"] == {"metric": "ordered_array"}
 
 
 def test_an_edit_adding_and_removing_columns_succeeds() -> None:

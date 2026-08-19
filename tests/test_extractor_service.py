@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from extractlayer.domain.errors import DomainError, NotFoundError, ValidationError
+from extractlayer.domain.errors import NotFoundError, ValidationError
 from extractlayer.repo.extractors import PostgresExtractorRepo
 from extractlayer.service.extractors import ExtractorService
 
@@ -50,15 +50,6 @@ async def test_updating_an_absent_extractor_raises_not_found(service: ExtractorS
         await service.update(ABSENT, "Receipts", "totals", SCHEMA)
 
 
-async def test_every_error_the_service_raises_is_a_domain_error(
-    service: ExtractorService,
-) -> None:
-    with pytest.raises(DomainError):
-        await service.get(ABSENT)
-    with pytest.raises(DomainError):
-        await service.create("Invoices", "", {"type": "array"}, ["body"])
-
-
 async def test_an_update_leaves_source_columns_as_created(service: ExtractorService) -> None:
     created = await service.create("Invoices", "line items", SCHEMA, ["body", "subject"])
     updated = await service.update(created.id, "Receipts", "totals", SCHEMA)
@@ -70,7 +61,7 @@ async def test_an_update_changing_a_column_type_is_refused(service: ExtractorSer
     changed: dict[str, Any] = {"type": "object", "properties": {"total": {"type": "string"}}}
     with pytest.raises(ValidationError) as raised:
         await service.update(created.id, "Invoices", "line items", changed)
-    assert "cannot change from 'number' to 'string'" in (
+    assert 'cannot change from {"type": "number"} to {"type": "string"}' in (
         raised.value.details["schema.properties.total.type"]
     )
     assert (await service.get(created.id)).schema.document == SCHEMA

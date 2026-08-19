@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -13,11 +14,50 @@ METRIC_KEYWORD = "x-el"
 METRIC_KEYS = frozenset({"metric"})
 
 
-def _type_of(column: Mapping[str, Any]) -> Any:
-    declared = column.get("type")
+def _json_type(value: Any) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, int | float):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, list):
+        return "array"
+    return "object"
+
+
+def _declared_type(subschema: Mapping[str, Any]) -> Any:
+    declared = subschema.get("type")
     if isinstance(declared, list):
-        return tuple(sorted(str(entry) for entry in declared))
+        names = sorted(str(entry) for entry in declared)
+        return names[0] if len(names) == 1 else names
     return declared
+
+
+def _type_shape(subschema: Any) -> Any:
+    if not isinstance(subschema, Mapping):
+        return None
+    shape: dict[str, Any] = {}
+    declared = _declared_type(subschema)
+    if declared is not None:
+        shape["type"] = declared
+    if "const" in subschema:
+        shape["const"] = _json_type(subschema["const"])
+    enum = subschema.get("enum")
+    if isinstance(enum, list):
+        shape["enum"] = sorted({_json_type(value) for value in enum})
+    items = subschema.get("items")
+    if items is not None:
+        shape["items"] = _type_shape(items)
+    prefix_items = subschema.get("prefixItems")
+    if isinstance(prefix_items, list):
+        shape["prefixItems"] = [_type_shape(entry) for entry in prefix_items]
+    properties = subschema.get("properties")
+    if isinstance(properties, Mapping):
+        shape["properties"] = {name: _type_shape(properties[name]) for name in sorted(properties)}
+    return shape
 
 
 def _metric_details(path: str, config: Any) -> dict[str, str]:
@@ -80,10 +120,11 @@ class ExtractorSchema:
             kept = previous.columns.get(name)
             if kept is None:
                 continue
-            before, after = _type_of(kept), _type_of(column)
+            before, after = _type_shape(kept), _type_shape(column)
             if before != after:
                 details[f"schema.properties.{name}.type"] = (
-                    f"cannot change from {before!r} to {after!r};"
+                    f"cannot change from {json.dumps(before, sort_keys=True)}"
+                    f" to {json.dumps(after, sort_keys=True)};"
                     " a schema edit adds and removes columns only"
                 )
         if details:
