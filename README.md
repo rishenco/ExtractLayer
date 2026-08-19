@@ -30,7 +30,7 @@ make gates       list gates and what each enforces
 AGENTS.md         operating rules, capped and enforced
 CLAUDE.md         thin Claude-specific layer over AGENTS.md
 docs/             vision, architecture, decisions, lessons
-work/<slug>/      plan, claims and review for one change
+work/<slug>/      plan and claims for one change
 scripts/gates/    the executable definition of done
 .claude/          skills, subagents, hooks
 ```
