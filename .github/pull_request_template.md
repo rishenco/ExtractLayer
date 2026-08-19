@@ -1,13 +1,12 @@
 ## Intent
 
-<!-- One paragraph: what is different for the user. Link the spec and plan. -->
+<!-- One paragraph: what is different for the user. Link the plan. -->
 
-Spec: `work/<slug>/spec.md`
 Plan: `work/<slug>/plan.md`
 
 ## Acceptance criteria
 
-<!-- Copy from the spec. Each ticked box names the test, gate or command that proves it. -->
+<!-- Copy from the plan. Each ticked box names the test, gate or command that proves it. -->
 
 - [ ] criterion — proven by `...`
 

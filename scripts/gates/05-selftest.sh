@@ -289,6 +289,25 @@ changed "docs/architecture.md"
 EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
   expect 75-claims.sh 0 "docs-only change needs no ledger"
 
+mkdir -p "$WORK/hook/docs" "$WORK/hook/work/planned" "$WORK/hook/work/unplanned"
+: >"$WORK/hook/docs/vision.md"
+printf 'Status: Approved\n' >"$WORK/hook/work/planned/plan.md"
+printf '## C1\n' >"$WORK/hook/work/unplanned/claims.md"
+hook_out="$(CLAUDE_PROJECT_DIR="$WORK/hook" bash .claude/hooks/session-start.sh 2>/dev/null)"
+
+grep -qx 'open work: planned (plan Approved)' <<<"$hook_out" || {
+  found=1
+  echo "session hook: does not report an approved plan"
+}
+grep -q 'unplanned' <<<"$hook_out" && {
+  found=1
+  echo "session hook: reports a slug with no plan as open work"
+}
+[ "$(grep -c '^open work:' <<<"$hook_out")" -eq 1 ] || {
+  found=1
+  echo "session hook: does not print exactly one state per slug"
+}
+
 : >"$WORK/empty"
 if ! EL_FILE_LIST="$WORK/empty" bash -eo pipefail -c '. scripts/lib/files.sh; el_workspaces' >/dev/null 2>&1; then
   found=1

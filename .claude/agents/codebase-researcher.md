@@ -18,12 +18,10 @@ Files and symbols where the behaviour starts, as `path:line`.
 The path the data takes, in the fewest steps that are still true.
 
 ## Layer
-Which layer from `docs/architecture.md` owns this, and which layers currently touch it.
-Name any existing boundary violation you found.
+Which layer from `docs/architecture.md` owns this, and which layers currently touch it. Name any existing boundary violation you found.
 
 ## Existing machinery
-What already exists that a change should reuse — helpers, patterns, libraries already in the
-dependency list. Include the convention this area follows, so a change can match it.
+What already exists that a change should reuse — helpers, patterns, libraries already in the dependency list. Include the convention this area follows, so a change can match it.
 
 ## Constraints
 Tests, contracts, callers and gates that a change must not break, as `path:line`.

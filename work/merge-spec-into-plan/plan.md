@@ -1,0 +1,62 @@
+# Merge the spec into the plan
+
+Status: Approved
+
+## Problem / Intent
+
+Two documents describe one change. No gate reads `spec.md`: `scripts/gates/70-approved-plan.sh` and `scripts/gates/75-claims.sh` name `plan.md` and `claims.md` only, so the spec carries a review cost and no enforcement. The split has already produced drift, recorded as a lesson in `docs/lessons.md:15`. Afterwards a change carries one document, approved once, with acceptance criteria that carry ids a later gate can match against claim ids.
+
+Objections: none.
+
+## Criteria
+
+- [x] A1 `/spec` is gone: `.claude/skills/spec/` does not exist. (C1)
+- [x] A2 `/plan` writes one document holding problem, criteria, not-doing, research, approach, steps and risks, and shows the intent half to the human before the approach half exists. (C2)
+- [x] A3 Acceptance criteria carry ids (`A1`, `A2`, ...) and `/build` ticks them in `plan.md`. (C3)
+- [x] A4 Outside `work/`, nothing names `/spec` or `spec.md`. (C4)
+- [x] A5 The lesson at `docs/lessons.md:15` is gone, its failure class being impossible. (C5)
+- [x] A6 `make check` passes. (C6)
+
+## Not doing
+
+- Deleting `docs/working.md`, capping `docs/lessons.md`, tiering the loop by change size.
+- The gate matching criterion ids against claim ids. The ids land here so that gate becomes writable; the gate is its own change.
+- Widening `EL_CODE_EXT` so prompt files need a plan and a ledger.
+
+## Research
+
+- `scripts/gates/70-approved-plan.sh:19-24` matches `work/*/plan.md` and greps `^Status:[[:space:]]*Approved$`. `scripts/gates/75-claims.sh:24-30` collects `work/*/claims.md`. Neither names `spec.md`.
+- `scripts/gates/05-selftest.sh:207-236` asserts exit codes of `70-approved-plan.sh`, never its message, so the message is free to change.
+- `/spec` or `spec.md` is named at: `README.md:10`, `CLAUDE.md:5`, `AGENTS.md:17`, `docs/working.md:5`, `scripts/gates/70-approved-plan.sh:36`, `.claude/skills/spec/SKILL.md`, `.claude/skills/plan/SKILL.md:3`, `.claude/skills/build/SKILL.md:45`, `.claude/agents/adversarial-reviewer.md:10`, `.claude/agents/claim-auditor.md:34`, `.claude/hooks/session-start.sh:5` and `:14`, `work/README.md:6`, `.github/pull_request_template.md:5`.
+- `.claude/hooks/session-start.sh:13-17` reports a slug as `spec only, no plan`, a state that stops existing.
+- `work/` has no slug directories, so no historical record is rewritten.
+  - Correction from the build: `work/reconcile-skill/` and this directory both exist. Neither holds a `spec.md`, so the conclusion stands and nothing was rewritten.
+
+## Approach
+
+One document at `work/<slug>/plan.md`, written by `/plan` in two passes: problem, criteria and not-doing first, shown to the human, then research, approach and steps. One `Status:` line, one approval. The path does not move, so `70-approved-plan.sh` and `75-claims.sh` are untouched. `/spec` is deleted and its readers point at the single document.
+
+Rejected — keeping both files and adding a consistency check between them: it pays a gate to maintain a split nothing enforces. Rejected — merging into `spec.md`: the two gates name `plan.md`, so renaming costs gate and selftest edits for nothing. Rejected — keeping `/spec` as an alias onto the merged document: two entry points for one artifact is the same drift moved.
+
+## Steps
+
+1. Rewrite `.claude/skills/plan/SKILL.md` as the merged skill: the template, criterion ids, the two-pass interaction, the approval rule — files: `.claude/skills/plan/SKILL.md` — proves it: `for s in Problem Criteria "Not doing" Research Approach Steps Risks; do grep -q "## .*$s" .claude/skills/plan/SKILL.md || exit 1; done` (A2, A3)
+   - Done: skill rewritten with the seven sections, criterion ids and the two-pass interaction. Check failed on `Problem` before, passes after. 64 lines, under the 67-line bound.
+2. Delete the spec skill — files: `.claude/skills/spec/SKILL.md` — proves it: `[ ! -e .claude/skills/spec ]` (A1)
+   - Done: `git rm -r .claude/skills/spec`. Check failed before, passes after.
+3. Move the loop line and the skill list — files: `AGENTS.md`, `CLAUDE.md`, `README.md`, `docs/working.md`, `.claude/hooks/session-start.sh`, `scripts/gates/70-approved-plan.sh` — proves it: `! grep -rn '/spec\b' --include='*.md' --include='*.sh' . | grep -v '^./work/'` (A4)
+   - Done: loop line, skill table, gate message and `docs/working.md` now name `/plan` alone; `AGENTS.md` **Intent** points ambiguities and objections at the plan. Finding: this check also matches the `/spec` inside `work/<slug>/spec.md`, so it is the same check as step 4 and only passed once step 5 landed.
+4. Move the artifact readers onto `plan.md` — files: `.claude/skills/build/SKILL.md`, `.claude/agents/adversarial-reviewer.md`, `.claude/agents/claim-auditor.md`, `work/README.md`, `.github/pull_request_template.md` — proves it: `! grep -rn 'spec\.md' --include='*.md' --include='*.sh' . | grep -v '^./work/'` (A4)
+   - Done: both subagents, `/build`, `work/README.md` and the pull request template read `plan.md`. Passed once step 5 landed.
+5. Drop the `spec only, no plan` branch from the session hook — files: `.claude/hooks/session-start.sh` — proves it: `./scripts/gates/05-selftest.sh` passes and the hook prints one state per slug (A4)
+   - Done: the branch is a `continue` guard now. Selftest passes; the hook prints one `open work:` line per slug.
+6. Delete the drift lesson — files: `docs/lessons.md` — proves it: `! grep -q 'supersedes a spec section' docs/lessons.md` (A5)
+   - Done: line deleted, 25 lines to 24. Check failed before, passes after.
+7. Run the whole check — proves it: `make check` (A6)
+   - Done: passes. Between steps 3 and 6 only `75-claims` failed, for want of a ledger that does not exist until the Claim phase.
+
+## Risks & open
+
+- The merged skill grows past one screen and the two-pass interaction gets skipped in practice. Visible as file length: the skill stays at or under the 67 lines it holds now.
+- A reader of a merged pull request loses the intent-only view that the spec gave. Visible in the pull request body, which keeps criteria and their evidence as separate sections.
+- Open: whether `docs/working.md` survives at all. Assumption taken: it stays, amended. Reversible by deleting it later, since nothing imports it.
