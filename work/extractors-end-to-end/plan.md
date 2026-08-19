@@ -67,24 +67,24 @@ Objections: none.
   `20-budgets` and `30-slop`. `10-comments.sh:20` fails on a `--` line in `.sql` unless it
   matches the directive allowlist (`10-comments.sh:8`), which carries no `depends:` entry.
 - `scripts/gates/55-lint-config.sh:39` requires `.vale.ini` or `vale.ini` at the root as soon as
-  any manifest exists. It checks presence; the `vale` binary is never invoked.
-- `scripts/install-workspaces.sh:14` runs `pip install -e '.[dev]'` and fails when the manifest
-  declares no `dev` extra.
-- `.github/workflows/ci.yml:20` sets up Python 3.11 and declares no services or containers.
-- `scripts/gates/40-changelog.sh:23` requires `CHANGELOG.md` in the changed set once any file
-  with a code extension changes.
-- `importlinter` is not installed here; `ruff`, `mypy` and `pytest` are. `.gitignore:2` already
-  ignores every Python cache directory and `.venv/`. No `pyproject.toml`, `.py`, `.sql`,
-  `docker-compose.yml` or `.vale.ini` exists.
+  any manifest exists; it checks presence and never invokes `vale`.
+  `scripts/install-workspaces.sh:14` runs `pip install -e '.[dev]'` and fails with no `dev`
+  extra. `.github/workflows/ci.yml:20` sets up Python 3.11 and declares no services.
+  `scripts/gates/40-changelog.sh:23` wants `CHANGELOG.md` in the changed set once code changes.
+- `importlinter` is not installed here; `ruff`, `mypy` and `pytest` are. `.gitignore:2` ignores
+  every Python cache and `.venv/`. No `pyproject.toml`, `.py`, `.sql` or `.vale.ini` exists.
 
 ## Approach
 
 The change lands as a vertical slice through all four layers of `docs/architecture.md` for one
 entity, so the layer map is proven by a running path rather than by a diagram. `domain` holds
 the Extractor and the schema's structure; `service` holds the use cases and declares
-`ExtractorRepo` as a `Protocol`; `repo` satisfies that protocol against Postgres and owns the
-migrations; `transport` maps REST to `ExtractorService`, another `Protocol`, and maps domain
-error types to status codes. `extractlayer/main.py` is the only module naming a concrete
+`ExtractorRepo` as a `Protocol`; `repo` satisfies that protocol against Postgres; `transport`
+maps HTTP to `ExtractorService`, another `Protocol`, and maps domain error types to status
+codes. Each protocol is declared in the file that consumes it, not a `dependencies` module: it
+has one caller, and an abstraction earns a module of its own at the second. Migrations are not
+Python and take part in no layer's import graph, so they sit at `extractlayer/migrations` and
+are applied by the composition root, `extractlayer/main.py` — the only module naming a concrete
 adapter. Schema rules sit in `domain` because they are invariants of the entity, not use cases;
 metric interpretation stays out because it is a `service` concern with no caller yet.
 
@@ -107,22 +107,27 @@ building all entities at one layer at a time, which leaves no working product un
 2. Domain — files: `extractlayer/domain/errors.py`, `domain/schema.py`, `domain/extractor.py`,
    `tests/test_schema.py` — proves it: `pytest -q tests/test_schema.py`. (A3, A9)
 3. Store and migrations — files: `extractlayer/config.py`, `repo/postgres.py`,
-   `repo/migrations/0001-extractors.sql`, `repo/extractors.py`, `docker-compose.yml`,
-   `.github/workflows/ci.yml`, `docs/decisions/0012-async-python-psycopg.md`,
-   `tests/conftest.py`, `tests/test_extractors_repo.py` — proves it:
+   `extractlayer/migrations/0001-extractors.sql`, `repo/extractors.py`, `docker-compose.yml`,
+   `.github/workflows/ci.yml`, `docs/decisions/0008-migrations-with-yoyo.md`,
+   `docs/decisions/0012-async-python-psycopg.md`, `tests/conftest.py`,
+   `tests/test_extractors_repo.py` — proves it:
    `pytest -q tests/test_extractors_repo.py`, which applies migrations twice from an empty
    database and walks a seeded page set. (A10, A4, A5)
-4. Service — files: `extractlayer/service/dependencies.py`, `service/extractors.py`,
+4. Service — files: `extractlayer/service/extractors.py`, `docs/architecture.md`,
+   `docs/decisions/0007-layers-own-their-dependencies.md`,
    `tests/test_extractor_service.py` — proves it: `pytest -q tests/test_extractor_service.py`.
    (A6, A8, A9)
-5. Transport — files: `extractlayer/transport/dependencies.py`, `transport/dto.py`,
-   `transport/errors.py`, `transport/rest.py`, `extractlayer/main.py`, `tests/test_rest.py` —
-   proves it: `pytest -q tests/test_rest.py`. (A4, A5, A6, A7, A8)
+5. Transport — files: `extractlayer/transport/dto.py`, `transport/errors.py`,
+   `transport/http.py`, `extractlayer/main.py`, `tests/test_http.py` — proves it:
+   `pytest -q tests/test_http.py`. (A4, A5, A6, A7, A8)
 6. Bootstrap — files: `Dockerfile`, `docker-compose.yml` — proves it: `docker compose up -d`
    then `curl -fsS localhost:8420/openapi.json`. (A11)
 
 ## Risks & open
 
+- ADR 0008 and ADR 0007 are amended, not superseded: what each decided still holds, and only a
+  path and a module name change. `45-doc-links.sh` does not check `extractlayer/` paths, so the
+  check that no citation dangles is `grep -rn 'repo/migrations\|\.dependencies' docs/`.
 - Migrations are plain SQL with no `-- depends:` line, because that directive is not in the
   allowlist of `10-comments.sh:8` and yoyo orders by filename without it. Visible if a later
   change needs a non-linear history; reversible by adding `depends:` to the allowlist with a
