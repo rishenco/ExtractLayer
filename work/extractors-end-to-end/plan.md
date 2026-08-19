@@ -104,6 +104,13 @@ building all entities at one layer at a time, which leaves no working product un
    `CHANGELOG.md` — proves it: `pytest -q tests/test_boundaries.py`, which runs `lint-imports`
    on the real tree and again with a probe module importing across a boundary, asserting the
    second run fails and names the contract. (A1, A2)
+   - Done: root workspace with `[tool.ruff]`, `[tool.mypy]`, `[tool.importlinter]`; `.vale.ini`
+     with a real style carrying the `30-slop.sh` and `35-narration.sh` phrases; four layer
+     packages; `tests/test_boundaries.py` writes the probe into the real tree under a fixture
+     and removes it, so the contract is checked against the tree that ships. Found: the layers
+     contract names only the layers that exist, so `extractlayer.main` joins it in step 5.
+     Found: `[tool.ruff]` drops `.py` from `10-comments.sh` and `20-budgets.sh`, and ruff has
+     no file-length or no-comments rule to replace them — the floor Python loses is real.
 2. Domain — files: `extractlayer/domain/errors.py`, `domain/schema.py`, `domain/extractor.py`,
    `tests/test_schema.py` — proves it: `pytest -q tests/test_schema.py`. (A3, A9)
 3. Store and migrations — files: `extractlayer/config.py`, `repo/postgres.py`,
