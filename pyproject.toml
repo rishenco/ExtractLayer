@@ -84,6 +84,7 @@ root_packages = ["extractlayer"]
 name = "Dependencies point inward"
 type = "layers"
 layers = [
+    "extractlayer.main",
     "extractlayer.transport | extractlayer.service | extractlayer.repo",
     "extractlayer.domain",
 ]

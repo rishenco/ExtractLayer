@@ -146,6 +146,12 @@ building all entities at one layer at a time, which leaves no working product un
 5. Transport — files: `extractlayer/transport/dto.py`, `transport/errors.py`,
    `transport/http.py`, `extractlayer/main.py`, `tests/test_http.py` — proves it:
    `pytest -q tests/test_http.py`. (A4, A5, A6, A7, A8)
+   - Done: the wire name is `schema` while the Python field is `document`, because a pydantic
+     field named `schema` shadows a `BaseModel` attribute; the OpenAPI document carries `schema`.
+     Request bodies forbid extra fields, so a `PUT` carrying `source_columns` is a 422 naming it.
+     `limit` is required and `after_id` is a declared optional. Two handlers registered on the
+     app map `DomainError` by type and `RequestValidationError` to per-field `details`; no route
+     catches anything. `extractlayer.main` joins the layers contract with the module.
 6. Bootstrap — files: `Dockerfile`, `docker-compose.yml` — proves it: `docker compose up -d`
    then `curl -fsS localhost:8420/openapi.json`. (A11)
 
@@ -171,5 +177,9 @@ building all entities at one layer at a time, which leaves no working product un
   model client exists yet. Assumption taken: it is not validated at startup until the client
   that needs it lands, and the architecture document is left unedited because it describes the
   design rather than one change. Reversible in either direction in change 2.
+- `limit` is required and bounded below at 1, with no upper bound: no document sets a maximum
+  page size, and a cap is a policy nobody has chosen. Assumption taken: reject a meaningless
+  limit, let a large one through, and leave the cap to the change that adds authorization.
+  Visible as an unbounded response; reversible by adding `le` to the query parameter.
 - `mypy` strictness against FastAPI and pydantic may need per-module overrides. Visible as a
   failing `mypy .`; each override is recorded in `pyproject.toml` rather than a blanket relax.
