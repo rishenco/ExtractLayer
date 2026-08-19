@@ -13,14 +13,17 @@ SCHEMA: dict[str, Any] = {"type": "object", "properties": {"total": {"type": "nu
 def test_migrations_build_the_schema_from_an_empty_database(empty_database: str) -> None:
     apply_migrations(empty_database)
     with psycopg.connect(empty_database) as connection:
-        table = connection.execute("SELECT to_regclass('extractlayer.extractors')").fetchone()
+        table = connection.execute(
+            "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace"
+            " WHERE n.nspname = 'extractlayer' AND c.relname = 'extractors' AND c.relkind = 'r'"
+        ).fetchone()
         columns = connection.execute(
             "SELECT column_name FROM information_schema.columns"
             " WHERE table_schema = 'extractlayer' AND table_name = 'extractors'"
             " ORDER BY column_name"
         ).fetchall()
     assert table is not None
-    assert table[0] == "extractlayer.extractors"
+    assert table[0] == 1
     assert [column[0] for column in columns] == [
         "created_at",
         "description",
