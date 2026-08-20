@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import re
+from pathlib import Path
 from typing import Any
 
 from httpx import ASGITransport, AsyncClient
 
 from extractlayer.config import Config
 from extractlayer.main import build_app
+
+ARCHITECTURE = Path(__file__).resolve().parent.parent / "docs" / "architecture.md"
+ROUTE = re.compile(r"`(GET|POST|PUT|DELETE|PATCH) (/[A-Za-z0-9{}/_-]*)`")
 
 SCHEMA: dict[str, Any] = {"type": "object", "properties": {"total": {"type": "number"}}}
 CREATED = 201
@@ -74,3 +79,28 @@ async def test_the_composition_root_serves_the_api_from_an_empty_database(
             )
             assert served.status_code == OK
             assert served.json() == {"derived_values": {"total": None}}
+
+
+def named_routes(text: str) -> set[tuple[str, str]]:
+    section = text.split("### REST", 1)[1].split("### MCP", 1)[0]
+    return {
+        (method, re.sub(r"\{[^}]*\}", "{}", path))
+        for method, path in ROUTE.findall(section)
+    }
+
+
+async def test_every_served_route_is_named_in_the_architecture(empty_database: str) -> None:
+    config = Config(database_url=empty_database, host="127.0.0.1", api_port=8420)
+    app = build_app(config)
+
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://extractlayer") as client:
+            document = (await client.get("/openapi.json")).json()
+
+    served = {
+        (method.upper(), re.sub(r"\{[^}]*\}", "{}", path))
+        for path, methods in document["paths"].items()
+        for method in methods
+    }
+    assert served <= named_routes(ARCHITECTURE.read_text())

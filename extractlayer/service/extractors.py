@@ -75,7 +75,7 @@ class ExtractorService:
         schema: Mapping[str, Any],
         source_columns: Sequence[str],
     ) -> Extractor:
-        parsed = ExtractorSchema.parse(schema)
+        parsed = ExtractorSchema.parse(schema).disjoint_from(source_columns)
         return await self.repo.create(name, description, parsed.document, source_columns)
 
     async def get(self, extractor_id: int) -> Extractor:
@@ -104,7 +104,9 @@ class ExtractorService:
         roles: ModelRoles,
     ) -> Extractor:
         current = await self.get(extractor_id)
-        edited = ExtractorSchema.edited(current.schema, schema)
+        edited = ExtractorSchema.edited(current.schema, schema).disjoint_from(
+            current.source_columns
+        )
         await self._check_roles(extractor_id, roles)
         edit = ExtractorEdit(
             name=name,

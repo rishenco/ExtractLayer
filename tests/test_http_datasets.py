@@ -17,6 +17,7 @@ ABSENT = 4321
 OK = 200
 CREATED = 201
 NOT_FOUND = 404
+METHOD_NOT_ALLOWED = 405
 UNPROCESSABLE = 422
 
 
@@ -74,9 +75,9 @@ async def test_a_dataset_round_trips_over_rest(client: AsyncClient) -> None:
     stored = created.json()
     assert (stored["name"], stored["description"]) == ("Golden", "hand checked")
 
-    read = await client.get(f"/datasets/{stored['id']}")
-    assert read.status_code == OK
-    assert read.json() == stored
+    listed = await client.get("/datasets", params={"limit": 10})
+    assert listed.status_code == OK
+    assert listed.json() == [stored]
 
 
 async def test_a_put_replaces_name_and_description_only(client: AsyncClient) -> None:
@@ -231,7 +232,6 @@ async def test_a_cursor_walks_a_datasets_rows_once(client: AsyncClient) -> None:
 
 
 async def test_reading_an_absent_dataset_or_its_rows_is_a_404(client: AsyncClient) -> None:
-    assert (await client.get(f"/datasets/{ABSENT}")).status_code == NOT_FOUND
     rows = await client.get(f"/datasets/{ABSENT}/rows", params={"limit": 10})
     assert rows.status_code == NOT_FOUND
     updated = await client.put(f"/datasets/{ABSENT}", json={"name": "x", "description": ""})
@@ -272,3 +272,9 @@ async def test_a_schema_edit_rewrites_the_rows_a_dataset_holds(client: AsyncClie
 
     remaining = (await client.get(f"/datasets/{dataset_id}/rows", params={"limit": 10})).json()
     assert remaining[0]["values"] == {"body": "one", "currency": None}
+
+
+async def test_no_route_reads_a_dataset_by_id(client: AsyncClient) -> None:
+    extractor_id = await extractor(client)
+    dataset_id = await dataset(client, extractor_id)
+    assert (await client.get(f"/datasets/{dataset_id}")).status_code == METHOD_NOT_ALLOWED

@@ -90,3 +90,30 @@ async def test_a_cursor_walks_the_service_listing_once(service: ExtractorService
         after_id = page[-1].id
 
     assert walked == seeded
+
+
+async def test_a_schema_column_named_after_a_source_column_is_refused(
+    service: ExtractorService,
+) -> None:
+    shadowing: dict[str, Any] = {
+        "type": "object",
+        "properties": {"body": {"type": "string"}, "total": {"type": "number"}},
+    }
+    with pytest.raises(ValidationError) as raised:
+        await service.create("Invoices", "line items", shadowing, ["body"])
+    assert raised.value.details["schema.properties.body"] == (
+        "is already a source column of this extractor"
+    )
+
+
+async def test_a_schema_edit_adding_a_column_named_after_a_source_column_is_refused(
+    service: ExtractorService,
+) -> None:
+    created = await service.create("Invoices", "line items", SCHEMA, ["body"])
+    shadowing: dict[str, Any] = {
+        "type": "object",
+        "properties": {"total": {"type": "number"}, "body": {"type": "string"}},
+    }
+    with pytest.raises(ValidationError) as raised:
+        await service.update(created.id, "Invoices", "line items", shadowing, NO_ROLES)
+    assert "schema.properties.body" in raised.value.details

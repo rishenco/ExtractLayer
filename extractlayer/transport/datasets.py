@@ -20,8 +20,6 @@ from extractlayer.transport.dto import (
 class _DatasetService(Protocol):
     async def create(self, extractor_id: int, name: str, description: str) -> Dataset: ...
 
-    async def get(self, dataset_id: int) -> Dataset: ...
-
     async def page(self, after_id: int | None, limit: int) -> list[Dataset]: ...
 
     async def update(self, dataset_id: int, name: str, description: str) -> Dataset: ...
@@ -48,10 +46,6 @@ def dataset_routes(datasets: _DatasetService) -> APIRouter:
     ) -> list[DatasetView]:
         found = await datasets.page(after_id, limit)
         return [DatasetView.of(dataset) for dataset in found]
-
-    @router.get("/{dataset_id}")
-    async def get(dataset_id: int) -> DatasetView:
-        return DatasetView.of(await datasets.get(dataset_id))
 
     @router.put("/{dataset_id}")
     async def update(dataset_id: int, payload: DatasetUpdate) -> DatasetView:

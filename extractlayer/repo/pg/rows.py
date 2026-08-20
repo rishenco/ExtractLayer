@@ -29,6 +29,23 @@ UPDATE_ROWS = (
 )
 
 
+def _as_written(
+    writes: Sequence[RowWrite],
+    updated: Sequence[DatasetRow],
+    inserted: Sequence[DatasetRow],
+) -> list[DatasetRow]:
+    by_id = {row.id: row for row in updated}
+    fresh = iter(sorted(inserted, key=lambda row: row.id))
+    landed: list[DatasetRow] = []
+    for write in writes:
+        if write.dead:
+            continue
+        row = next(fresh, None) if write.id is None else by_id.get(write.id)
+        if row is not None:
+            landed.append(row)
+    return landed
+
+
 @dataclass(frozen=True)
 class RowRecord:
     id: int
@@ -80,10 +97,11 @@ class PostgresRowRepo:
         return {row[0]: row[1] for row in found}
 
     async def apply(self, writes: Sequence[RowWrite], source: RowSource) -> list[DatasetRow]:
-        dead = [write.id for write in writes if write.dead]
+        dead = [write.id for write in writes if write.dead and write.id is not None]
         updates = [write for write in writes if not write.dead and write.id is not None]
         inserts = [write for write in writes if not write.dead and write.id is None]
-        landed: list[DatasetRow] = []
+        updated: list[DatasetRow] = []
+        inserted: list[DatasetRow] = []
         async with self.pool.connection() as connection:
             cursor = connection.cursor(row_factory=class_row(RowRecord))
             if dead:
@@ -101,7 +119,7 @@ class PostgresRowRepo:
                         [write.dataset_id for write in updates],
                     ),
                 )
-                landed.extend(row.as_row() for row in await cursor.fetchall())
+                updated = [row.as_row() for row in await cursor.fetchall()]
             if inserts:
                 await cursor.execute(
                     INSERT_ROWS,
@@ -111,5 +129,5 @@ class PostgresRowRepo:
                         [source.value] * len(inserts),
                     ),
                 )
-                landed.extend(row.as_row() for row in await cursor.fetchall())
-        return sorted(landed, key=lambda row: row.id)
+                inserted = [row.as_row() for row in await cursor.fetchall()]
+        return _as_written(writes, updated, inserted)

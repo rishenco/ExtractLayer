@@ -182,3 +182,71 @@ async def test_a_schema_edit_rewrites_the_rows_a_dataset_already_holds(
 
     (row,) = await dataset_service.rows_of(dataset.id, None, 10)
     assert row.values == {"body": "one", "currency": None}
+
+
+async def test_a_batch_naming_one_row_twice_names_the_second_index_and_lands_nothing(
+    extractor_service: ExtractorService, dataset_service: DatasetService
+) -> None:
+    extractor = await extractor_service.create("Invoices", "line items", SCHEMA, ["body"])
+    dataset = await dataset_service.create(extractor.id, "Golden", "")
+    (landed,) = await dataset_service.write_rows([write(dataset.id, body="one")])
+
+    with pytest.raises(ValidationError) as raised:
+        await dataset_service.write_rows(
+            [
+                write(dataset.id, row_id=landed.id, body="first"),
+                write(dataset.id, row_id=landed.id, body="second"),
+            ]
+        )
+    assert raised.value.details == {
+        "rows.1.id": f"names row {landed.id}, which an earlier row in this batch names"
+    }
+    (unchanged,) = await dataset_service.rows_of(dataset.id, None, 10)
+    assert unchanged.values["body"] == "one"
+
+
+async def test_a_batch_updating_and_killing_one_row_is_refused_rather_than_silently_dropped(
+    extractor_service: ExtractorService, dataset_service: DatasetService
+) -> None:
+    extractor = await extractor_service.create("Invoices", "line items", SCHEMA, ["body"])
+    dataset = await dataset_service.create(extractor.id, "Golden", "")
+    (landed,) = await dataset_service.write_rows([write(dataset.id, body="one")])
+
+    with pytest.raises(ValidationError):
+        await dataset_service.write_rows(
+            [
+                write(dataset.id, row_id=landed.id, body="edited"),
+                write(dataset.id, row_id=landed.id, dead=True),
+            ]
+        )
+    assert len(await dataset_service.rows_of(dataset.id, None, 10)) == 1
+
+
+async def test_written_rows_come_back_in_the_order_the_batch_named_them(
+    extractor_service: ExtractorService, dataset_service: DatasetService
+) -> None:
+    extractor = await extractor_service.create("Invoices", "line items", SCHEMA, ["body"])
+    dataset = await dataset_service.create(extractor.id, "Golden", "")
+    older = await dataset_service.write_rows(
+        [write(dataset.id, body=f"row {index}") for index in range(3)]
+    )
+
+    landed = await dataset_service.write_rows(
+        [
+            write(dataset.id, body="fresh"),
+            write(dataset.id, row_id=older[0].id, body="edited"),
+            write(dataset.id, body="fresher"),
+        ]
+    )
+    assert [row.values["body"] for row in landed] == ["fresh", "edited", "fresher"]
+    assert landed[1].id == older[0].id
+    assert landed[0].id > older[-1].id
+
+
+async def test_a_row_naming_a_source_column_the_schema_also_names_cannot_arise(
+    extractor_service: ExtractorService, dataset_service: DatasetService
+) -> None:
+    extractor = await extractor_service.create("Invoices", "line items", SCHEMA, ["body"])
+    dataset = await dataset_service.create(extractor.id, "Golden", "")
+    (landed,) = await dataset_service.write_rows([write(dataset.id, body="invoice 7", total=3)])
+    assert landed.values == {"body": "invoice 7", "total": 3}

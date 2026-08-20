@@ -6,6 +6,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A derived column may not be named after one of the extractor's source columns, at creation or at a schema edit, so a row can no longer lose its source value to a column that shadows it.
 - Datasets, models and the serve path: give an extractor datasets of rows validated against its source columns and schema, batch-upsert and delete those rows, create models and archive the ones a role no longer needs, point the specimen and serving roles at them, and call `POST /extractors/{id}/serve` to turn one source row into its derived row.
 - Extractors over a REST API: create one with source columns and a JSON Schema draft 2020-12 schema, read it, update its name, description and schema, page through them with a cursor, and delete it. `docker compose up` brings up the database and the service.
 - The product design: vision, the implementation description (entities, storage, API, workflows, layer map), and decision records (`docs/`).

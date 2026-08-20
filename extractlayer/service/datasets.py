@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, Sequence, Set
 from dataclasses import replace
 from typing import Protocol
 
@@ -70,8 +70,11 @@ class DatasetService:
         held = await self.rows.datasets_of(ids)
         details: dict[str, str] = {}
         normalized: list[RowWrite] = []
+        seen: set[int] = set()
         for index, write in enumerate(writes):
-            problem = self._problem(index, write, owners, held)
+            problem = self._problem(index, write, owners, held, seen)
+            if write.id is not None:
+                seen.add(write.id)
             if problem:
                 details |= problem
                 continue
@@ -90,11 +93,14 @@ class DatasetService:
 
     async def _owners(self, writes: Sequence[RowWrite]) -> dict[int, Extractor]:
         owners: dict[int, Extractor] = {}
+        read: dict[int, Extractor | None] = {}
         for dataset_id in dict.fromkeys(write.dataset_id for write in writes):
             dataset = await self.repo.get(dataset_id)
             if dataset is None:
                 continue
-            extractor = await self.extractors.get(dataset.extractor_id)
+            if dataset.extractor_id not in read:
+                read[dataset.extractor_id] = await self.extractors.get(dataset.extractor_id)
+            extractor = read[dataset.extractor_id]
             if extractor is not None:
                 owners[dataset_id] = extractor
         return owners
@@ -105,10 +111,13 @@ class DatasetService:
         write: RowWrite,
         owners: Mapping[int, Extractor],
         held: Mapping[int, int],
+        seen: Set[int],
     ) -> dict[str, str]:
         at = f"rows.{index}"
         if write.dataset_id not in owners:
             return {f"{at}.dataset_id": "names no dataset"}
+        if write.id in seen:
+            return {f"{at}.id": f"names row {write.id}, which an earlier row in this batch names"}
         if write.id is not None and held.get(write.id) != write.dataset_id:
             return {f"{at}.id": f"names no row of dataset {write.dataset_id}"}
         if write.dead and write.id is None:

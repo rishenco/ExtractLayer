@@ -1,7 +1,7 @@
 ## C1
 Claim: A row is validated against its extractor — a missing, non-string or unknown source value and an unknown derived column are each rejected under their own key, a derived column may be null, and a missing derived column normalizes to null.
-Evidence: `tests/test_row_values.py` covers each case against `Extractor.validated_row` and `Extractor.validated_source_values`; 11 tests pass.
-Verify: pytest -q tests/test_row_values.py
+Evidence: `tests/test_row_values.py` covers each case against `Extractor.validated_row` and `Extractor.validated_source_values`, and a derived column may not shadow a source column, so no name reaches both halves of the split.
+Verify: pytest -q tests/test_row_values.py tests/test_extractor_service.py
 Verdict:
 
 ## C2
@@ -24,7 +24,7 @@ Verdict:
 
 ## C5
 Claim: Dataset create, read, list and update round-trip over REST with a cursor, `extractor_id` is create-only, and `GET /datasets/{id}/rows` is cursor-paginated.
-Evidence: `test_a_dataset_round_trips_over_rest`, `test_a_put_replaces_name_and_description_only`, `test_a_put_carrying_the_extractor_is_rejected`, `test_a_cursor_walks_the_dataset_listing_once` and `test_a_cursor_walks_a_datasets_rows_once` in `tests/test_http_datasets.py`.
+Evidence: `test_a_dataset_round_trips_over_rest` reads back through the listing, with `test_a_put_replaces_name_and_description_only`, `test_a_put_carrying_the_extractor_is_rejected`, `test_a_cursor_walks_the_dataset_listing_once` and `test_a_cursor_walks_a_datasets_rows_once` in `tests/test_http_datasets.py`.
 Verify: pytest -q tests/test_http_datasets.py
 Verdict:
 
@@ -68,4 +68,22 @@ Verdict:
 Claim: `make check` passes on this tree.
 Evidence: every gate reports ok and the workspace runs ruff, mypy and 157 passing tests.
 Verify: make check
+Verdict:
+
+## C13
+Claim: A derived column may not be named after a source column, at extractor creation and at a schema edit alike.
+Evidence: `test_a_schema_column_named_after_a_source_column_is_refused` and `test_a_schema_edit_adding_a_column_named_after_a_source_column_is_refused` in `tests/test_extractor_service.py` assert `details["schema.properties.body"]`.
+Verify: pytest -q tests/test_extractor_service.py
+Verdict:
+
+## C14
+Claim: A batch naming one row id twice is refused under the second row's index and lands nothing, and rows come back in the order the batch named them.
+Evidence: `test_a_batch_naming_one_row_twice_names_the_second_index_and_lands_nothing`, `test_a_batch_updating_and_killing_one_row_is_refused_rather_than_silently_dropped` and `test_written_rows_come_back_in_the_order_the_batch_named_them` in `tests/test_datasets_service.py`.
+Verify: pytest -q tests/test_datasets_service.py
+Verdict:
+
+## C15
+Claim: Every route the app serves is named in the REST list of `docs/architecture.md`, and a route that is not fails the build.
+Evidence: `test_every_served_route_is_named_in_the_architecture` in `tests/test_bootstrap.py` compares the OpenAPI paths with the routes parsed out of that section, matching path parameters by position.
+Verify: pytest -q tests/test_bootstrap.py
 Verdict:
