@@ -22,6 +22,17 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "create_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/pr-subscribe.sh",
+            "statusMessage": "Checking the new pull request has a listener",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "Stop": [

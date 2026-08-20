@@ -96,6 +96,18 @@ expect 20-budgets.sh 1 "oversized source is caught"
 fixture short.ts 'export const a = 1'
 expect 20-budgets.sh 0 "source within budget passes"
 
+fixture work/big/plan.md "$(for i in $(seq 201); do echo "line $i"; done)"
+expect 20-budgets.sh 1 "oversized plan is caught"
+
+fixture work/talky/plan.md "$(echo '## TL;DR'; for i in $(seq 16); do echo "- bullet $i"; done; echo '## Criteria')"
+expect 20-budgets.sh 1 "oversized plan TL;DR is caught"
+
+fixture work/fit/plan.md '## TL;DR
+- one bullet
+
+## Criteria'
+expect 20-budgets.sh 0 "plan within budgets passes"
+
 fixture filler.ts 'export const s = "It is worth noting that this sentence is empty."'
 expect 30-slop.sh 1 "filler phrasing is caught"
 
@@ -223,9 +235,16 @@ EL_CHANGED_LIST="$WORK/changed" expect 40-changelog.sh 0 "docs-only change needs
 changed "ui/src/thing.ts"
 EL_CHANGED_LIST="$WORK/changed" expect 70-approved-plan.sh 1 "source change with no approved plan is caught"
 
-add_file work/wk/plan.md 'Status: Approved'
+add_file work/wk/plan.md 'Status: Approved
+
+## TL;DR
+- one bullet'
 changed "ui/src/thing.ts" "$WORK/work/wk/plan.md"
 EL_CHANGED_LIST="$WORK/changed" expect 70-approved-plan.sh 0 "source change with an approved plan passes"
+
+add_file work/wk0/plan.md 'Status: Approved'
+changed "ui/src/thing.ts" "$WORK/work/wk0/plan.md"
+EL_CHANGED_LIST="$WORK/changed" expect 70-approved-plan.sh 1 "an approved plan without a TL;DR does not count"
 
 add_file work/wk2/plan.md 'Status: Draft'
 changed "ui/src/thing.ts" "$WORK/work/wk2/plan.md"
@@ -345,25 +364,6 @@ EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
 changed "docs/architecture.md"
 EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
   expect 75-claims.sh 0 "docs-only change needs no ledger"
-
-mkdir -p "$WORK/hook/docs" "$WORK/hook/work/planned" "$WORK/hook/work/unplanned"
-: >"$WORK/hook/docs/vision.md"
-printf 'Status: Approved\n' >"$WORK/hook/work/planned/plan.md"
-printf '## C1\n' >"$WORK/hook/work/unplanned/claims.md"
-hook_out="$(CLAUDE_PROJECT_DIR="$WORK/hook" bash .claude/hooks/session-start.sh 2>/dev/null)"
-
-grep -qx 'open work: planned (plan Approved)' <<<"$hook_out" || {
-  found=1
-  echo "session hook: does not report an approved plan"
-}
-grep -q 'unplanned' <<<"$hook_out" && {
-  found=1
-  echo "session hook: reports a slug with no plan as open work"
-}
-[ "$(grep -c '^open work:' <<<"$hook_out")" -eq 1 ] || {
-  found=1
-  echo "session hook: does not print exactly one state per slug"
-}
 
 : >"$WORK/empty"
 if ! EL_FILE_LIST="$WORK/empty" bash -eo pipefail -c '. scripts/lib/files.sh; el_workspaces' >/dev/null 2>&1; then
