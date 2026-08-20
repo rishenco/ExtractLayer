@@ -8,13 +8,20 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_CONTENT,
+    HTTP_502_BAD_GATEWAY,
 )
 
-from extractlayer.domain.errors import DomainError, NotFoundError, ValidationError
+from extractlayer.domain.errors import (
+    DomainError,
+    NotFoundError,
+    UpstreamModelError,
+    ValidationError,
+)
 
 STATUS_BY_ERROR: tuple[tuple[type[DomainError], int], ...] = (
     (NotFoundError, HTTP_404_NOT_FOUND),
     (ValidationError, HTTP_422_UNPROCESSABLE_CONTENT),
+    (UpstreamModelError, HTTP_502_BAD_GATEWAY),
 )
 
 
