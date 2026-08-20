@@ -10,7 +10,7 @@ from extractlayer.domain.schema import ExtractorSchema
 ENTITY = "extractor"
 
 
-class ExtractorRepo(Protocol):
+class _ExtractorRepo(Protocol):
     async def create(
         self,
         name: str,
@@ -35,7 +35,7 @@ class ExtractorRepo(Protocol):
 
 
 class ExtractorService:
-    def __init__(self, repo: ExtractorRepo) -> None:
+    def __init__(self, repo: _ExtractorRepo) -> None:
         self.repo = repo
 
     async def create(

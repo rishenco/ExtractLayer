@@ -33,7 +33,7 @@ while IFS= read -r f; do
   [ -z "$hits" ] && continue
   found=1
   printf '%s\n' "$hits" | sed "s|^|$f:|"
-done < <(el_code_files | grep -vE '(^|/)scripts/gates/05-selftest\.sh$' | el_drop_linted || true)
+done < <(el_code_files | grep -vE '(^|/)scripts/gates/[0-9]+-selftest[a-z-]*\.sh$' | el_drop_linted || true)
 
 [ "$found" -eq 0 ] && exit 0
 echo

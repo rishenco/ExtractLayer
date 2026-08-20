@@ -57,12 +57,16 @@ select = [
     "PTH",
     "RET",
     "RUF",
+    "S101",
     "SIM",
     "T20",
     "TID",
     "UP",
     "W",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
 
 [tool.mypy]
 python_version = "3.11"

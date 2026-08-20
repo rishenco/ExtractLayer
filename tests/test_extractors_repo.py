@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 import psycopg
+import pytest
 
+from extractlayer.repo import extractors as extractors_repo
 from extractlayer.repo.extractors import PostgresExtractorRepo
 from extractlayer.repo.postgres import apply_migrations
 
@@ -56,6 +58,20 @@ async def test_an_extractor_round_trips(extractors: PostgresExtractorRepo) -> No
     assert stored.description == "line items"
     assert stored.schema.document == SCHEMA
     assert stored.source_columns == ("body", "subject")
+
+
+async def test_a_row_maps_by_column_name_rather_than_position(
+    extractors: PostgresExtractorRepo,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    shuffled = "updated_at, source_columns, schema, description, id, created_at, name"
+    monkeypatch.setattr(extractors_repo, "COLUMNS", shuffled)
+    created = await extractors.create("Invoices", "line items", SCHEMA, ["body", "subject"])
+    assert created.name == "Invoices"
+    assert created.description == "line items"
+    assert created.schema.document == SCHEMA
+    assert created.source_columns == ("body", "subject")
+    assert await extractors.get(created.id) == created
 
 
 async def test_an_update_replaces_name_description_and_schema(

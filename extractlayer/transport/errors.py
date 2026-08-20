@@ -26,7 +26,8 @@ def status_for(error: DomainError) -> int:
 
 
 async def domain_error_response(_request: Request, error: Exception) -> JSONResponse:
-    assert isinstance(error, DomainError)
+    if not isinstance(error, DomainError):
+        raise error
     details = error.details if isinstance(error, ValidationError) else {}
     return JSONResponse(
         status_code=status_for(error),
@@ -35,7 +36,8 @@ async def domain_error_response(_request: Request, error: Exception) -> JSONResp
 
 
 async def request_error_response(_request: Request, error: Exception) -> JSONResponse:
-    assert isinstance(error, RequestValidationError)
+    if not isinstance(error, RequestValidationError):
+        raise error
     details: dict[str, str] = {}
     for entry in error.errors():
         path = ".".join(str(part) for part in entry["loc"] if part not in ("body", "query"))

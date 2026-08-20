@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from extractlayer.config import Config
 from extractlayer.repo.extractors import PostgresExtractorRepo
 from extractlayer.repo.postgres import apply_migrations, open_pool
-from extractlayer.service.extractors import ExtractorRepo, ExtractorService
+from extractlayer.service.extractors import ExtractorService
 from extractlayer.transport import http
 
 
@@ -25,8 +25,8 @@ def build_app(config: Config) -> FastAPI:
         finally:
             await pool.close()
 
-    repo: ExtractorRepo = PostgresExtractorRepo(pool)
-    service: http.ExtractorService = ExtractorService(repo)
+    repo = PostgresExtractorRepo(pool)
+    service = ExtractorService(repo)
     return http.create_app(service, lifespan=lifespan)
 
 

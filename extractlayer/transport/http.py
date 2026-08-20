@@ -14,7 +14,7 @@ from extractlayer.transport.errors import install_error_handlers
 Lifespan = Callable[[FastAPI], AbstractAsyncContextManager[None]]
 
 
-class ExtractorService(Protocol):
+class _ExtractorService(Protocol):
     async def create(
         self,
         name: str,
@@ -38,7 +38,7 @@ class ExtractorService(Protocol):
     async def delete(self, extractor_id: int) -> None: ...
 
 
-def extractor_routes(extractors: ExtractorService) -> APIRouter:
+def extractor_routes(extractors: _ExtractorService) -> APIRouter:
     router = APIRouter(prefix="/extractors", tags=["extractors"])
 
     @router.post("", status_code=HTTP_201_CREATED)
@@ -75,7 +75,7 @@ def extractor_routes(extractors: ExtractorService) -> APIRouter:
     return router
 
 
-def create_app(extractors: ExtractorService, lifespan: Lifespan | None = None) -> FastAPI:
+def create_app(extractors: _ExtractorService, lifespan: Lifespan | None = None) -> FastAPI:
     app = FastAPI(title="ExtractLayer", lifespan=lifespan)
     install_error_handlers(app)
     app.include_router(extractor_routes(extractors))

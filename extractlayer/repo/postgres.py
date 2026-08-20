@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+from importlib import resources
 from urllib.parse import urlsplit, urlunsplit
 
 from psycopg import AsyncConnection
@@ -8,7 +8,7 @@ from psycopg.rows import TupleRow
 from psycopg_pool import AsyncConnectionPool
 from yoyo import get_backend, read_migrations
 
-MIGRATIONS = Path(__file__).resolve().parent.parent / "migrations"
+MIGRATIONS = resources.files("extractlayer") / "migrations"
 YOYO_SCHEME = "postgresql+psycopg"
 
 

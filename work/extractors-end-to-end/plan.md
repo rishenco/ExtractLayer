@@ -21,7 +21,7 @@ Objections: none.
 - [x] A1 (C1) `make check` passes with the workspace present: every gate, plus `ruff`, `mypy` and
       `pytest`.
 - [x] A2 (C2) The layer map is enforced, not described: a `service` module importing `repo` makes
-      `pytest` fail, and the same test passes on the real tree.
+      `make check` fail, and the same gate passes on the real tree.
 - [x] A3 (C3) Schema validation holds the domain rule: a non-object schema, an object with no
       properties, and an unknown `x-el` key are each rejected by name; a draft 2020-12 object
       carrying `x-el` metric config on a column and on an array's `items` is accepted.
@@ -113,6 +113,21 @@ building all entities at one layer at a time, which leaves no working product un
      contract names only the layers that exist, so `extractlayer.main` joins it in step 5.
      Found: `[tool.ruff]` drops `.py` from `10-comments.sh` and `20-budgets.sh`, and ruff has
      no file-length or no-comments rule to replace them — the floor Python loses is real.
+   - Found in review: a test that shells out to a linter tests no runtime behaviour, so the
+     layer map belongs to a gate; `tests/test_boundaries.py` is deleted. Found: merely running
+     `lint-imports` is weaker than the test it replaced, which wrote a module that crossed a
+     boundary and asserted rejection — the linter exits 0 on contracts that constrain nothing.
+     Four shapes satisfy a check that reads the contract table and enforce nothing: a
+     `forbidden` contract, one carrying a stray `layers` key, `ignore_imports`, and a namespace
+     package the linter never analyses. `scripts/gates/50-architecture.sh` writes the probe
+     instead — a module in the lowest package layer importing the top layer — and fails unless
+     `lint-imports` rejects it, refusing `ignore_imports` and unanalysable packages outright.
+     `scripts/gates/06-selftest-workspaces.sh` pins each shape. Found: a check that reasons
+     about configuration or the filesystem loses to a shape it did not predict — a `forbidden`
+     contract, an exemption spelled as a TOML escape or in upper case, a namespace directory
+     behind a symlink. What holds is asking the tool: the gate compares `import-linter`'s own
+     `Analyzed N files` against the modules the root packages hold, and reads each config with
+     the library that config's own reader uses.
 2. Domain — files: `extractlayer/domain/errors.py`, `domain/schema.py`, `domain/extractor.py`,
    `tests/test_schema.py` — proves it: `pytest -q tests/test_schema.py`. (A3, A9)
    - Done: `ExtractorSchema.parse` rejects a non-object schema, a non-`object` type, an empty
@@ -209,3 +224,15 @@ building all entities at one layer at a time, which leaves no working product un
   Visible as an unbounded response; reversible by adding `le` to the query parameter.
 - `mypy` strictness against FastAPI and pydantic may need per-module overrides. Visible as a
   failing `mypy .`; each override is recorded in `pyproject.toml` rather than a blanket relax.
+- The boundary gate proves one edge per contract: a module in the lowest package layer may not
+  import the top layer. Sibling independence is not proved — `import-linter` holds `|` siblings
+  apart unconditionally, so a probe between them passes on every well-formed contract and no
+  fixture can make it fail. A contract whose layers are ordered wrongly, or which stops naming
+  siblings, describes a different architecture that no gate here can judge. Assumption taken:
+  the layer table is reviewed by a human, and the gate proves only that it bites. Reversible by
+  pinning the table itself against `docs/architecture.md`.
+- The gate reads `pyproject.toml` for the contracts it derives a probe from, while
+  `import-linter` prefers `.importlinter` or `setup.cfg` when either exists. A workspace that
+  declares its contracts only in an ini file fails the gate at `[tool.importlinter]` rather than
+  being read from that file. Visible as a gate failure naming the missing table.
+
