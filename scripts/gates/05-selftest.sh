@@ -1,9 +1,42 @@
 #!/usr/bin/env bash
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
-. scripts/lib/selftest.sh
 
 [ "${1:-}" = "--describe" ] && { echo "Gates still fire on known violations, and only on those."; exit 0; }
+
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+
+found=0
+
+add_file() {
+  mkdir -p "$(dirname "$WORK/$1")"
+  printf '%s\n' "$2" >"$WORK/$1"
+}
+
+fixture() {
+  add_file "$1" "$2"
+  printf '%s\n' "$WORK/$1" >"$WORK/list"
+}
+
+changed() { printf '%s\n' "$@" >"$WORK/changed"; }
+
+expect() {
+  local gate="$1" want="$2" name="$3" got
+  EL_FILE_LIST="$WORK/list" "./scripts/gates/$gate" >/dev/null 2>&1
+  got=$?
+  [ "$got" -eq "$want" ] && return 0
+  found=1
+  printf '%s: %s exited %s, expected %s\n' "$name" "$gate" "$got" "$want"
+}
+
+expect_silent_about() {
+  local gate="$1" pattern="$2" name="$3" out
+  out="$(EL_FILE_LIST="$WORK/list" "./scripts/gates/$gate" 2>&1)"
+  grep -qE "$pattern" <<<"$out" || return 0
+  found=1
+  printf '%s: %s still reports %s\n' "$name" "$gate" "$pattern"
+}
 
 fixture bad.ts '// explains the obvious
 export const a = 1'
@@ -114,6 +147,58 @@ expect 45-doc-links.sh 0 "a placeholder segment is not a path to resolve"
 fixture work/wl/notes.md 'See docs/does-not-exist.md.'
 expect 45-doc-links.sh 0 "references inside work/ are not checked"
 
+fixture ws1/package.json '{"name":"fixture","scripts":{}}'
+expect 50-architecture.sh 1 "workspace without boundary config is caught"
+expect 60-workspaces.sh 1 "workspace without a check script is caught"
+
+add_file ws2/.dependency-cruiser.js 'module.exports = { forbidden: [] }'
+fixture ws2/package.json '{"name":"fixture","scripts":{"check":"true"}}'
+expect 50-architecture.sh 0 "node workspace with a boundary config passes"
+
+add_file gows/.go-arch-lint.yml 'version: 3'
+fixture gows/go.mod 'module fixture'
+expect 50-architecture.sh 0 "go workspace with a boundary config passes"
+
+add_file pyws/pyproject.toml '[tool.importlinter]
+root_package = "fixture"
+[tool.ruff]
+[tool.mypy]'
+fixture pyws/pyproject.toml "$(cat "$WORK/pyws/pyproject.toml")"
+expect 50-architecture.sh 0 "python workspace with importlinter contracts passes"
+expect 60-workspaces.sh 0 "python workspace with no sources and configured tooling passes"
+
+add_file gows2/.golangci.yml 'linters:
+  enable: [govet]'
+fixture gows2/go.mod 'module fixture'
+expect_silent_about 60-workspaces.sh 'no .golangci config' "a present golangci config is detected"
+
+fixture lint1/package.json '{"name":"fixture","scripts":{"check":"true"}}'
+expect 55-lint-config.sh 1 "a workspace without a linter config is caught"
+
+add_file lint2/eslint.config.js 'export default []'
+add_file lint2/bad.ts '// explains the obvious
+export const a = 1'
+printf '%s\n%s\n' "$WORK/lint2/package.json" "$WORK/lint2/bad.ts" >"$WORK/list"
+add_file lint2/package.json '{"name":"fixture","scripts":{"check":"true"}}'
+expect 10-comments.sh 0 "a linted workspace is no longer scanned by the floor"
+
+printf '%s\n' "$WORK/lint2/bad.ts" >"$WORK/list"
+expect 10-comments.sh 1 "the floor still scans a file outside any linted workspace"
+
+add_file bad.sh '# explains the loop
+echo hi'
+add_file pyproject.toml '[tool.ruff]
+line-length = 99'
+printf '%s\n%s\n' "$WORK/pyproject.toml" "$WORK/bad.sh" >"$WORK/list"
+expect 10-comments.sh 1 "a root workspace does not retire the floor for what its linter cannot parse"
+
+if command -v npm >/dev/null 2>&1; then
+  mkdir -p "$WORK/ws2/node_modules"
+  fixture ws2/package.json '{"name":"fixture","version":"1.0.0","scripts":{"check":"true"}}'
+  expect 60-workspaces.sh 0 "node workspace with a passing check script passes"
+else
+  echo "npm not installed — skipped the 60-workspaces pass case"
+fi
 
 changed "ui/src/thing.ts"
 EL_CHANGED_LIST="$WORK/changed" expect 40-changelog.sh 1 "source change without a changelog entry is caught"
@@ -274,12 +359,6 @@ if ! EL_FILE_LIST="$WORK/empty" bash -eo pipefail -c '. scripts/lib/files.sh; el
   found=1
   echo "el_workspaces: exits non-zero under 'set -e -o pipefail' when no workspace exists"
 fi
-
-for sibling in scripts/gates/*-selftest*.sh; do
-  [ -x "$sibling" ] && continue
-  found=1
-  echo "$sibling: not executable — the fixtures it carries never run"
-done
 
 [ "$found" -eq 0 ] && exit 0
 echo

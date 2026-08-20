@@ -73,13 +73,13 @@ Dependencies point inward: `transport`, `service` and `repo` sit above `domain`,
 | `repo` | Adapters satisfying the protocols `service` declares, structurally: DB, external APIs | `domain` | `service`, `transport` |
 | `transport` | Transport in, DTO out; declares the services it drives beside the transport that drives them | `domain` | `service`, `repo` |
 
-A consumer declares the interface it needs; implementations satisfy it by shape, never by import (`docs/decisions/0007-layers-own-their-dependencies.md`). Wiring lives at the composition root, `extractlayer/main.py` — the only module that names a concrete adapter. The workspace is the repository root; the backend language is Python (`docs/decisions/0005-backend-python.md`), boundaries held as `[tool.importlinter]` contracts in `pyproject.toml`.
+A consumer declares the interface it needs; implementations satisfy it by shape, never by import (`docs/decisions/0007-layers-own-their-dependencies.md`). Wiring lives at the composition root, `extractlayer/main.py` — the only module that names a concrete adapter. The workspace is the repository root; the backend language is Python (`docs/decisions/0005-backend-python.md`), boundaries held as `[tool.importlinter]` contracts in `pyproject.toml` and run by a boundary test under `pytest`.
 
 The UI is TypeScript/React, sliced `pages → features → entities → shared`: a slice imports only strictly lower slices, cross-imports between features go through `entities` or `shared`, server-state access is confined to `features` and below.
 
 ## Enforcement
 
-Every workspace declares its boundaries in a config its linter reads (`dependency-cruiser`, `go-arch-lint`, `import-linter`); `scripts/gates/50-architecture.sh` fails when a workspace has none, proves a Python workspace's contracts refuse an import across a boundary by making one, and fails when a module the tree holds is missing from the graph the linter built. Changing a boundary means changing the config in the same commit as the code. Superseding this map means a new ADR.
+Every workspace declares its boundaries in a config its linter reads (`dependency-cruiser`, `go-arch-lint`, `import-linter`); `scripts/gates/50-architecture.sh` fails when a workspace has none. Changing a boundary means changing the config in the same commit as the code. Superseding this map means a new ADR.
 
 ## Configuration
 

@@ -24,4 +24,4 @@ A service can be read without leaving its layer: the interfaces it needs are dec
 
 The cost is duplication by design: two layers that need the same collaborator declare it twice, and a change to a service signature changes the protocol the transport declares as well. That is the price of the sibling rule, which is what keeps the layers substitutable.
 
-Nothing outside the composition root can reach `repo`, so accidental coupling to the store or to OpenRouter fails `make check` rather than review.
+Nothing outside the composition root can reach `repo`, so accidental coupling to the store or to OpenRouter fails `pytest` rather than review.
