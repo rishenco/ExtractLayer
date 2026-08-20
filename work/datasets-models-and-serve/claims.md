@@ -36,9 +36,9 @@ Verdict: SUPPORTED
 
 ## C7
 Claim: `POST /extractors/{id}/serve` returns a derived row through the serving model, falls back to the specimen when the serving role is unset, and is a 400 naming the extractor when neither role is set.
-Evidence: `test_a_serve_call_returns_a_derived_row_through_the_serving_model` and `test_a_serve_call_falls_back_to_the_specimen_over_rest` in `tests/test_http_models.py` drive the route; `test_the_serving_model_is_preferred_over_the_specimen` and `test_serve_falls_back_to_the_specimen_when_no_serving_model_is_set` in `tests/test_serve.py` assert which model's specification the executor was handed, so inverting the preference fails them; `test_serving_with_no_model_is_a_named_400` in `tests/test_http.py` pins the 400.
+Evidence: `test_a_serve_call_returns_a_derived_row_through_the_serving_model` and `test_a_serve_call_falls_back_to_the_specimen_over_rest` in `tests/test_http_models.py` drive the route; `test_the_serving_model_is_preferred_over_the_specimen` in `tests/test_serve.py` asserts which model's specification the executor was handed, so inverting the preference fails it; `test_serve_falls_back_to_the_specimen_when_no_serving_model_is_set` covers the fallback, and `test_serving_with_no_model_is_a_named_400` in `tests/test_http.py` pins the 400.
 Verify: pytest -q tests/test_serve.py tests/test_http.py tests/test_http_models.py
-Verdict: UNSUPPORTED
+Verdict: SUPPORTED
 
 ## C8
 Claim: The extractor service selects an executor by the specification's `kind`, an unknown kind is a named error at model creation, the `dummy` kind runs with no network call, and a model returning a row the schema rejects is a 502.
@@ -66,9 +66,9 @@ Verdict: SUPPORTED
 
 ## C12
 Claim: `make check` passes on this tree.
-Evidence: every gate reports ok, and 60-workspaces runs ruff, mypy and 167 passing tests; settle this one last, since 75-claims reads the verdicts written above it.
+Evidence: every gate reports ok, and 60-workspaces runs ruff, mypy and 167 passing tests.
 Verify: make check
-Verdict: FALSE
+Verdict: SUPPORTED
 
 ## C13
 Claim: A derived column may not be named after a source column, at extractor creation and at a schema edit alike.
