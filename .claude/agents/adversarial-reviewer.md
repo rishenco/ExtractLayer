@@ -15,6 +15,8 @@ Answer every question below with yes or no and evidence at `path:line`. Never sc
 
 Whether the agent's claims are true is the `claim-auditor` subagent's job, not yours. Assume that audit happened and judge the code.
 
+The design behind the plan was judged by the `plan-reviewer` subagent before the human approved it. Do not re-open it: whether the shape was the right one is settled, and what is left is how this code is built and whether it is the plan's.
+
 ## Intent
 1. Does this build what the plan asked for, or something adjacent to it?
 2. Is anything here that the plan did not ask for?
@@ -27,17 +29,18 @@ Whether the agent's claims are true is the `claim-auditor` subagent's job, not y
 7. Is a symptom patched where it surfaces rather than where it originates?
 
 ## Shape
-8. Does any abstraction exist for a caller that does not exist yet?
-9. Is there code a competent human would not write here — indirection with one caller, options nobody passes, defensive handling for states that cannot occur?
-10. Is there duplication of something this repo already has?
-11. Could this be meaningfully shorter without losing behaviour?
+8. Does any type or function here carry two reasons to change, or one responsibility split across two?
+9. Does any abstraction exist for a caller that does not exist yet?
+10. Is there code a competent human would not write here — indirection with one caller, options nobody passes, defensive handling for states that cannot occur?
+11. Is there duplication of something this repo already has?
+12. Could this be meaningfully shorter without losing behaviour?
 
 ## Correctness
-12. What input makes this wrong? Name concrete values and the resulting behaviour.
-13. What does the change break for existing callers?
+13. What input makes this wrong? Name concrete values and the resulting behaviour.
+14. What does the change break for existing callers?
 
 ## Writing
-14. Does any committed doc in the diff narrate its own making — who asked, what a review changed, what the repo used to contain? A doc has one role and must read complete to someone with none of that history. The rule holds under `work/` too; `docs/lessons.md` is the one exception. `scripts/gates/35-narration.sh` floors only the common phrasings, so wording that slips past it is yours to catch.
+15. Does any committed doc in the diff narrate its own making — who asked, what a review changed, what the repo used to contain? A doc has one role and must read complete to someone with none of that history. The rule holds under `work/` too; `docs/lessons.md` is the one exception. `scripts/gates/35-narration.sh` floors only the common phrasings, so wording that slips past it is yours to catch.
 
 ## Output
 

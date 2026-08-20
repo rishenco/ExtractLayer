@@ -14,9 +14,11 @@ A claim about the code that `make check` cannot verify is either made verifiable
 
 ## The loop
 
-`/plan` → **human approves** → `/build` → claim audit → code review → PR → **human approves** → `/compound`
+`/plan` → design review → **human approves** → `/build` → claim audit → code review → PR → **human approves** → `/compound`
 
 Claims about the work are separate from the work. `/build` writes `work/<slug>/claims.md`, the `claim-auditor` subagent reproduces each claim from scratch, and `scripts/gates/75-claims.sh` fails on any verdict that is `UNSUPPORTED`, `FALSE`, or missing. An agent's word is not evidence, including your own.
+
+Two reviews, two altitudes. The `plan-reviewer` subagent attacks the design before approval — contracts, scale, reuse, and what the next capability costs on this shape. The `adversarial-reviewer` attacks the code after `/build` — layer, responsibility, shape, correctness. Neither runs behind a gate, so a plan that records nothing raised, or a pull request whose findings are empty, is one where nobody looked.
 
 `scripts/gates/70-approved-plan.sh` checks it: a branch that changes source needs a `work/<slug>/plan.md` marked `Status: Approved`. Setting that line yourself is forgery, not a shortcut — the gate makes intent traceable, and the pull request review is what enforces it.
 

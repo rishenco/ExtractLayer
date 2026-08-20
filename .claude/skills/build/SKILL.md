@@ -52,7 +52,9 @@ Do not argue with it. A claim it could not reproduce is withdrawn or made true �
 
 ## Review
 
-Run the `adversarial-reviewer` subagent, separately, for the code itself: layer, shape, correctness. Fix every blocking finding. For minor findings, fix or record why not — in the pull request, not in a comment in the code.
+Run the `adversarial-reviewer` subagent, separately, for the code itself: layer, responsibility, shape, correctness. The design was attacked at `/plan` and settled at approval; this pass is how the code is built. Fix every blocking finding. For minor findings, fix or record why not — in the pull request, not in a comment in the code.
+
+No gate checks that this ran either. The pull request body carries the findings and how each was resolved.
 
 Re-run `make check` after fixes. Then run `/compound` on anything either agent found that could recur elsewhere.
 
