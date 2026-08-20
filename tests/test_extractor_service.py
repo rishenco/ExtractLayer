@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from typing import Any
 
 import pytest
 
 from extractlayer.domain.errors import NotFoundError, ValidationError
-from extractlayer.repo.extractors import PostgresExtractorRepo
+from extractlayer.domain.extractor import ModelRoles
 from extractlayer.service.extractors import ExtractorService
 
 SCHEMA: dict[str, Any] = {"type": "object", "properties": {"total": {"type": "number"}}}
 ABSENT = 4321
+NO_ROLES = ModelRoles(specimen_model_id=None, serving_model_id=None)
 
 
 @pytest.fixture
-async def service(extractors: PostgresExtractorRepo) -> AsyncIterator[ExtractorService]:
-    yield ExtractorService(extractors)
+def service(extractor_service: ExtractorService) -> ExtractorService:
+    return extractor_service
 
 
 async def test_a_created_extractor_carries_its_validated_schema(
@@ -47,12 +47,12 @@ async def test_deleting_an_absent_extractor_raises_not_found(service: ExtractorS
 
 async def test_updating_an_absent_extractor_raises_not_found(service: ExtractorService) -> None:
     with pytest.raises(NotFoundError):
-        await service.update(ABSENT, "Receipts", "totals", SCHEMA)
+        await service.update(ABSENT, "Receipts", "totals", SCHEMA, NO_ROLES)
 
 
 async def test_an_update_leaves_source_columns_as_created(service: ExtractorService) -> None:
     created = await service.create("Invoices", "line items", SCHEMA, ["body", "subject"])
-    updated = await service.update(created.id, "Receipts", "totals", SCHEMA)
+    updated = await service.update(created.id, "Receipts", "totals", SCHEMA, NO_ROLES)
     assert updated.source_columns == ("body", "subject")
 
 
@@ -60,7 +60,7 @@ async def test_an_update_changing_a_column_type_is_refused(service: ExtractorSer
     created = await service.create("Invoices", "line items", SCHEMA, ["body"])
     changed: dict[str, Any] = {"type": "object", "properties": {"total": {"type": "string"}}}
     with pytest.raises(ValidationError) as raised:
-        await service.update(created.id, "Invoices", "line items", changed)
+        await service.update(created.id, "Invoices", "line items", changed, NO_ROLES)
     assert 'cannot change from {"type": "number"} to {"type": "string"}' in (
         raised.value.details["schema.properties.total.type"]
     )
@@ -73,7 +73,7 @@ async def test_an_update_adding_and_removing_columns_succeeds(service: Extractor
         "type": "object",
         "properties": {"total": {"type": "number"}, "currency": {"type": "string"}},
     }
-    updated = await service.update(created.id, "Invoices", "line items", edited)
+    updated = await service.update(created.id, "Invoices", "line items", edited, NO_ROLES)
     assert sorted(updated.schema.columns) == ["currency", "total"]
 
 
@@ -90,3 +90,30 @@ async def test_a_cursor_walks_the_service_listing_once(service: ExtractorService
         after_id = page[-1].id
 
     assert walked == seeded
+
+
+async def test_a_schema_column_named_after_a_source_column_is_refused(
+    service: ExtractorService,
+) -> None:
+    shadowing: dict[str, Any] = {
+        "type": "object",
+        "properties": {"body": {"type": "string"}, "total": {"type": "number"}},
+    }
+    with pytest.raises(ValidationError) as raised:
+        await service.create("Invoices", "line items", shadowing, ["body"])
+    assert raised.value.details["schema.properties.body"] == (
+        "is already a source column of this extractor"
+    )
+
+
+async def test_a_schema_edit_adding_a_column_named_after_a_source_column_is_refused(
+    service: ExtractorService,
+) -> None:
+    created = await service.create("Invoices", "line items", SCHEMA, ["body"])
+    shadowing: dict[str, Any] = {
+        "type": "object",
+        "properties": {"total": {"type": "number"}, "body": {"type": "string"}},
+    }
+    with pytest.raises(ValidationError) as raised:
+        await service.update(created.id, "Invoices", "line items", shadowing, NO_ROLES)
+    assert "schema.properties.body" in raised.value.details

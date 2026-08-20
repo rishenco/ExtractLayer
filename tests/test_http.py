@@ -6,9 +6,8 @@ from typing import Any
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from extractlayer.repo.extractors import PostgresExtractorRepo
 from extractlayer.service.extractors import ExtractorService
-from extractlayer.transport.http import create_app
+from extractlayer.transport.http import create_app, extractor_routes
 
 SCHEMA: dict[str, Any] = {"type": "object", "properties": {"total": {"type": "number"}}}
 ABSENT = 4321
@@ -16,8 +15,21 @@ ABSENT = 4321
 OK = 200
 CREATED = 201
 NO_CONTENT = 204
+BAD_REQUEST = 400
 NOT_FOUND = 404
 UNPROCESSABLE = 422
+
+
+def put(**overrides: Any) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "name": "Invoices",
+        "description": "line items",
+        "schema": SCHEMA,
+        "specimen_model_id": None,
+        "serving_model_id": None,
+    }
+    payload.update(overrides)
+    return payload
 
 
 def body(**overrides: Any) -> dict[str, Any]:
@@ -32,8 +44,8 @@ def body(**overrides: Any) -> dict[str, Any]:
 
 
 @pytest.fixture
-async def client(extractors: PostgresExtractorRepo) -> AsyncIterator[AsyncClient]:
-    app = create_app(ExtractorService(extractors))
+async def client(extractor_service: ExtractorService) -> AsyncIterator[AsyncClient]:
+    app = create_app([extractor_routes(extractor_service)])
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://extractlayer"
     ) as client:
@@ -50,7 +62,7 @@ async def test_an_extractor_round_trips_over_rest(client: AsyncClient) -> None:
 
     read = await client.get(f"/extractors/{stored['id']}")
     assert read.status_code == OK
-    assert read.json() == stored
+    assert read.json() == stored | {"datasets": [], "models": []}
 
 
 async def test_a_put_replaces_name_description_and_schema(client: AsyncClient) -> None:
@@ -58,7 +70,7 @@ async def test_a_put_replaces_name_description_and_schema(client: AsyncClient) -
     edited: dict[str, Any] = {"type": "object", "properties": {"currency": {"type": "string"}}}
     updated = await client.put(
         f"/extractors/{created['id']}",
-        json={"name": "Receipts", "description": "totals", "schema": edited},
+        json=put(name="Receipts", description="totals", schema=edited),
     )
     assert updated.status_code == OK
     assert updated.json()["name"] == "Receipts"
@@ -104,12 +116,7 @@ async def test_a_put_carrying_source_columns_is_rejected(client: AsyncClient) ->
     created = (await client.post("/extractors", json=body())).json()
     response = await client.put(
         f"/extractors/{created['id']}",
-        json={
-            "name": "Receipts",
-            "description": "totals",
-            "schema": SCHEMA,
-            "source_columns": ["body"],
-        },
+        json=put(name="Receipts", description="totals", source_columns=["body"]),
     )
     assert response.status_code == UNPROCESSABLE
     assert "source_columns" in response.json()["details"]
@@ -139,12 +146,12 @@ async def test_a_missing_field_is_never_defaulted(client: AsyncClient) -> None:
 async def test_not_found_maps_to_404_on_every_route(client: AsyncClient) -> None:
     assert (await client.get(f"/extractors/{ABSENT}")).status_code == NOT_FOUND
     assert (await client.delete(f"/extractors/{ABSENT}")).status_code == NOT_FOUND
-    put = await client.put(
+    replaced = await client.put(
         f"/extractors/{ABSENT}",
-        json={"name": "Receipts", "description": "totals", "schema": SCHEMA},
+        json=put(name="Receipts", description="totals"),
     )
-    assert put.status_code == NOT_FOUND
-    assert put.json()["error"] == f"extractor {ABSENT} does not exist"
+    assert replaced.status_code == NOT_FOUND
+    assert replaced.json()["error"] == f"extractor {ABSENT} does not exist"
 
 
 async def test_a_domain_validation_error_maps_to_422_with_its_details(
@@ -162,7 +169,7 @@ async def test_a_schema_edit_changing_a_column_type_is_refused_over_rest(
     changed: dict[str, Any] = {"type": "object", "properties": {"total": {"type": "string"}}}
     response = await client.put(
         f"/extractors/{created['id']}",
-        json={"name": "Invoices", "description": "line items", "schema": changed},
+        json=put(schema=changed),
     )
     assert response.status_code == UNPROCESSABLE
     assert 'cannot change from {"type": "number"} to {"type": "string"}' in (
@@ -190,7 +197,7 @@ async def test_a_schema_edit_changing_an_array_element_type_is_refused_over_rest
     }
     response = await client.put(
         f"/extractors/{created['id']}",
-        json={"name": "Invoices", "description": "line items", "schema": changed},
+        json=put(schema=changed),
     )
     assert response.status_code == UNPROCESSABLE
     assert "schema.properties.lines.type" in response.json()["details"]
@@ -201,3 +208,42 @@ async def test_the_openapi_document_names_the_schema_field(client: AsyncClient) 
     view = document["components"]["schemas"]["ExtractorView"]["properties"]
     assert "schema" in view
     assert "document" not in view
+
+
+async def test_serving_with_no_model_is_a_named_400(client: AsyncClient) -> None:
+    created = (await client.post("/extractors", json=body())).json()
+    response = await client.post(
+        f"/extractors/{created['id']}/serve",
+        json={"source_values": {"body": "invoice 7", "subject": "October"}},
+    )
+    assert response.status_code == BAD_REQUEST
+    assert response.json()["error"] == (
+        f"extractor {created['id']} names neither a serving nor a specimen model,"
+        " so it cannot serve"
+    )
+
+
+async def test_a_serve_row_that_does_not_fit_the_extractor_is_a_422(client: AsyncClient) -> None:
+    created = (await client.post("/extractors", json=body())).json()
+    response = await client.post(
+        f"/extractors/{created['id']}/serve",
+        json={"source_values": {"body": "invoice 7"}},
+    )
+    assert response.status_code == UNPROCESSABLE
+    assert response.json()["details"] == {"source_values.subject": "is required"}
+
+
+async def test_serving_an_absent_extractor_is_a_404(client: AsyncClient) -> None:
+    response = await client.post(
+        f"/extractors/{ABSENT}/serve", json={"source_values": {"body": "x", "subject": "y"}}
+    )
+    assert response.status_code == NOT_FOUND
+
+
+async def test_a_serve_request_missing_source_values_is_rejected_by_name(
+    client: AsyncClient,
+) -> None:
+    created = (await client.post("/extractors", json=body())).json()
+    response = await client.post(f"/extractors/{created['id']}/serve", json={})
+    assert response.status_code == UNPROCESSABLE
+    assert response.json()["details"]["source_values"] == "Field required"

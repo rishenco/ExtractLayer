@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 
 
@@ -12,9 +14,25 @@ class NotFoundError(DomainError):
         self.entity_id = entity_id
 
 
+class ConflictError(DomainError):
+    pass
+
+
+class UpstreamModelError(DomainError):
+    pass
+
+
 class ValidationError(DomainError):
     def __init__(self, details: Mapping[str, str]) -> None:
         super().__init__(
             "; ".join(f"{field}: {message}" for field, message in sorted(details.items()))
         )
         self.details = dict(details)
+
+    def at(self, prefix: str) -> ValidationError:
+        return ValidationError(
+            {
+                f"{prefix}.{path}" if path else prefix: message
+                for path, message in self.details.items()
+            }
+        )

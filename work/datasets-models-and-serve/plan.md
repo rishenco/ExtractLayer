@@ -40,29 +40,29 @@ Objections:
 
 ## Criteria
 
-- [ ] B1 A row is validated against its extractor: a source value that is missing, not a string or
+- [x] B1 A row is validated against its extractor: a source value that is missing, not a string or
       not a source column is rejected by name, an unknown derived column likewise, a derived column
       may be null, and a missing derived column normalizes to null.
-- [ ] B2 Migration 0002 builds `models`, `datasets`, `dataset_rows` and the two extractor role
+- [x] B2 Migration 0002 builds `models`, `datasets`, `dataset_rows` and the two extractor role
       columns from an empty database and is safe to re-run.
-- [ ] B3 Model create and read round-trip over REST; no update route exists.
-- [ ] B4 `POST /models/{id}/archive` archives; archiving a model bound to a role is a named 400, an
+- [x] B3 Model create and read round-trip over REST; no update route exists.
+- [x] B4 `POST /models/{id}/archive` archives; archiving a model bound to a role is a named 400, an
       archived model still reads through `GET /models/{id}`, and setting one as a role is rejected.
-- [ ] B5 Dataset create, list and update round-trip, cursor-paginated; `extractor_id` is
+- [x] B5 Dataset create, list and update round-trip, cursor-paginated; `extractor_id` is
       create-only; `GET /datasets/{id}/rows` is cursor-paginated.
-- [ ] B6 `POST /rows` inserts rows with no id, updates rows with one and deletes rows carrying
+- [x] B6 `POST /rows` inserts rows with no id, updates rows with one and deletes rows carrying
       `dead: true`, across more than one dataset per call; one invalid row makes it a 422 whose
       `details` names the failing row by index, and no row in that batch lands.
-- [ ] B7 `POST /extractors/{id}/serve` returns a derived row through the serving model, falls back
+- [x] B7 `POST /extractors/{id}/serve` returns a derived row through the serving model, falls back
       to the specimen when the serving role is unset, and is a named 400 when neither is set.
-- [ ] B8 Execution is a seam: the service selects an executor by the specification's `kind`, an
+- [x] B8 Execution is a seam: the service selects an executor by the specification's `kind`, an
       unknown kind is a named error at model creation, the `dummy` kind runs with no network, and a
       model returning a row the schema rejects is a 502.
-- [ ] B9 Both roles are set through `PUT /extractors/{id}`; a role naming another extractor's model
+- [x] B9 Both roles are set through `PUT /extractors/{id}`; a role naming another extractor's model
       is rejected by name.
-- [ ] B10 `GET /extractors/{id}` carries its datasets' ids, names and descriptions, and its
+- [x] B10 `GET /extractors/{id}` carries its datasets' ids, names and descriptions, and its
       non-archived models' ids, kinds and known datasets.
-- [ ] B11 A schema edit rewrites stored rows in the same write: an added column reads null on older
+- [x] B11 A schema edit rewrites stored rows in the same write: an added column reads null on older
       rows, a removed column's values are gone.
 
 ## Not doing
@@ -129,9 +129,15 @@ Rejected:
 1. Domain — files: `extractlayer/domain/schema.py`, `domain/extractor.py`, `domain/model.py`,
    `domain/dataset.py`, `domain/dataset_row.py`, `domain/errors.py`, `tests/test_row_values.py`,
    `CHANGELOG.md` — proves it: `pytest -q tests/test_row_values.py tests/test_schema.py`. (B1, B8)
+   - Done: derived values are validated as the non-null subset against the document with
+     top-level `required` dropped, which reads the same rule and reports a column's own
+     message. `Extractor` gained both role ids, so `repo/extractors.py` passes them null.
 2. ADR and architecture — files: `docs/decisions/0013-models-are-archived.md`,
    `docs/architecture.md` — proves it: `make check` over the edit, plus
    `grep -rn 'DELETE /models' docs/` returning nothing. (B4)
+   - Done: the architecture now says a model is archived and names ADR 0013, its specification
+     carries the `kind` that names an executor, and the nullable rule reads as the rule rather
+     than the wrapping that used to implement it.
 3. Store — files: `extractlayer/migrations/0002-datasets-models.sql`, `repo/pg/extractors.py`
    and `repo/pg/db.py` (today's `repo/extractors.py` and `repo/postgres.py`), `repo/pg/models.py`,
    `repo/pg/datasets.py`, `repo/pg/rows.py`, the movers' importers (`extractlayer/main.py`,
@@ -140,16 +146,27 @@ Rejected:
    proves it:
    `pytest -q tests/test_extractors_repo.py tests/test_models_repo.py tests/test_datasets_repo.py`,
    which applies both migrations twice from empty and pages a seeded set. (B2, B5, B6, B11)
+   - Done: `known_datasets` round-trips as `int[]`, so the `jsonb` fallback stayed unused, and
+     an extractor's deletion takes its models, datasets and rows. An 8-argument repo `update`
+     became `ExtractorEdit`, which carries the previous schema and derives the column delta,
+     so `service/extractors.py` and its protocol moved with it rather than in step 4.
 4. Services and the executor seam — files: `extractlayer/service/models.py`,
    `service/datasets.py`, `service/extractors.py`, `repo/model_executors/dummy.py`,
    `tests/test_models_service.py`, `tests/test_datasets_service.py`, `tests/test_serve.py` —
    proves it: `pytest -q tests/test_models_service.py tests/test_datasets_service.py
    tests/test_serve.py`. (B4, B7, B8, B9, B10, B11)
+   - Done: the two role ids became `ModelRoles`, which holds the serve fallback and answers
+     which roles name a model, so the archive refusal names one. B9's half of the wire moved
+     here with it, because a `PUT` that dropped both roles between steps is worse than a
+     larger step. Writing a row stores the validated values, not the ones sent.
 5. Transport — files: `extractlayer/transport/dto.py`, `transport/datasets.py`,
    `transport/models.py`, `transport/http.py`, `extractlayer/main.py`, `tests/test_http.py`,
    `tests/test_http_datasets.py`, `tests/test_http_models.py`, `tests/test_bootstrap.py` — proves
    it: `pytest -q tests/test_http.py tests/test_http_datasets.py tests/test_http_models.py
    tests/test_bootstrap.py`. (B3, B4, B5, B6, B7, B9, B10)
+   - Done: `create_app` composes routers rather than services, so each transport module keeps
+     its own service protocol private. `transport/errors.py`, which no step named, maps
+     `UpstreamModelError` to 502 — B8 asks for the code and nothing else could produce it.
 
 ## Risks & open
 

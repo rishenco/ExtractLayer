@@ -8,8 +8,16 @@ from uuid import uuid4
 import psycopg
 import pytest
 
-from extractlayer.repo.extractors import PostgresExtractorRepo
-from extractlayer.repo.postgres import apply_migrations, open_pool
+from extractlayer.domain.model import ModelKind
+from extractlayer.repo.model_executors.dummy import DummyModelExecutor
+from extractlayer.repo.pg.datasets import PostgresDatasetRepo
+from extractlayer.repo.pg.db import Pool, apply_migrations, open_pool
+from extractlayer.repo.pg.extractors import PostgresExtractorRepo
+from extractlayer.repo.pg.models import PostgresModelRepo
+from extractlayer.repo.pg.rows import PostgresRowRepo
+from extractlayer.service.datasets import DatasetService
+from extractlayer.service.extractors import ExtractorService
+from extractlayer.service.models import ModelService
 
 DEFAULT_DATABASE_URL = "postgresql://extractlayer:extractlayer@127.0.0.1:5432/extractlayer"
 
@@ -36,11 +44,58 @@ def empty_database() -> Iterator[str]:
 
 
 @pytest.fixture
-async def extractors(empty_database: str) -> AsyncIterator[PostgresExtractorRepo]:
+async def pool(empty_database: str) -> AsyncIterator[Pool]:
     apply_migrations(empty_database)
-    pool = open_pool(empty_database)
-    await pool.open()
+    opened = open_pool(empty_database)
+    await opened.open()
     try:
-        yield PostgresExtractorRepo(pool)
+        yield opened
     finally:
-        await pool.close()
+        await opened.close()
+
+
+@pytest.fixture
+def extractors(pool: Pool) -> PostgresExtractorRepo:
+    return PostgresExtractorRepo(pool)
+
+
+@pytest.fixture
+def models(pool: Pool) -> PostgresModelRepo:
+    return PostgresModelRepo(pool)
+
+
+@pytest.fixture
+def datasets(pool: Pool) -> PostgresDatasetRepo:
+    return PostgresDatasetRepo(pool)
+
+
+@pytest.fixture
+def rows(pool: Pool) -> PostgresRowRepo:
+    return PostgresRowRepo(pool)
+
+
+@pytest.fixture
+def extractor_service(
+    extractors: PostgresExtractorRepo,
+    models: PostgresModelRepo,
+    datasets: PostgresDatasetRepo,
+) -> ExtractorService:
+    return ExtractorService(
+        extractors, models, datasets, {ModelKind.DUMMY: DummyModelExecutor()}
+    )
+
+
+@pytest.fixture
+def model_service(
+    models: PostgresModelRepo, extractors: PostgresExtractorRepo
+) -> ModelService:
+    return ModelService(models, extractors)
+
+
+@pytest.fixture
+def dataset_service(
+    datasets: PostgresDatasetRepo,
+    rows: PostgresRowRepo,
+    extractors: PostgresExtractorRepo,
+) -> DatasetService:
+    return DatasetService(datasets, rows, extractors)

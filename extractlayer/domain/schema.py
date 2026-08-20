@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -134,3 +134,30 @@ class ExtractorSchema:
     @property
     def columns(self) -> Mapping[str, Mapping[str, Any]]:
         return dict(self.document["properties"])
+
+    def disjoint_from(self, source_columns: Sequence[str]) -> ExtractorSchema:
+        reserved = set(source_columns)
+        details = {
+            f"schema.properties.{name}": "is already a source column of this extractor"
+            for name in sorted(self.columns)
+            if name in reserved
+        }
+        if details:
+            raise ValidationError(details)
+        return self
+
+    def derived_values(self, values: Mapping[str, Any]) -> dict[str, Any]:
+        columns = self.columns
+        details = {
+            name: "is not a column of this extractor's schema"
+            for name in values
+            if name not in columns
+        }
+        normalized: dict[str, Any] = {name: values.get(name) for name in columns}
+        optional = {key: value for key, value in self.document.items() if key != "required"}
+        present = {name: value for name, value in normalized.items() if value is not None}
+        for error in Draft202012Validator(optional).iter_errors(present):
+            details[".".join(str(part) for part in error.absolute_path)] = error.message
+        if details:
+            raise ValidationError(details)
+        return normalized

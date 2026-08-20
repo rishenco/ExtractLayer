@@ -8,6 +8,8 @@ from psycopg.rows import TupleRow
 from psycopg_pool import AsyncConnectionPool
 from yoyo import get_backend, read_migrations
 
+Pool = AsyncConnectionPool[AsyncConnection[TupleRow]]
+
 MIGRATIONS = resources.files("extractlayer") / "migrations"
 YOYO_SCHEME = "postgresql+psycopg"
 
@@ -24,5 +26,5 @@ def apply_migrations(database_url: str) -> None:
         backend.apply_migrations(backend.to_apply(migrations))
 
 
-def open_pool(database_url: str) -> AsyncConnectionPool[AsyncConnection[TupleRow]]:
+def open_pool(database_url: str) -> Pool:
     return AsyncConnectionPool(database_url, open=False)

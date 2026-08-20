@@ -7,8 +7,15 @@ from typing import Any, Protocol
 from fastapi import APIRouter, FastAPI, Query, Response
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
-from extractlayer.domain.extractor import Extractor
-from extractlayer.transport.dto import ExtractorCreate, ExtractorUpdate, ExtractorView
+from extractlayer.domain.extractor import Extractor, ExtractorDetail, ModelRoles
+from extractlayer.transport.dto import (
+    ExtractorCreate,
+    ExtractorDetailView,
+    ExtractorUpdate,
+    ExtractorView,
+    ServeRequest,
+    ServeView,
+)
 from extractlayer.transport.errors import install_error_handlers
 
 Lifespan = Callable[[FastAPI], AbstractAsyncContextManager[None]]
@@ -23,7 +30,7 @@ class _ExtractorService(Protocol):
         source_columns: Sequence[str],
     ) -> Extractor: ...
 
-    async def get(self, extractor_id: int) -> Extractor: ...
+    async def detail(self, extractor_id: int) -> ExtractorDetail: ...
 
     async def page(self, after_id: int | None, limit: int) -> list[Extractor]: ...
 
@@ -33,9 +40,14 @@ class _ExtractorService(Protocol):
         name: str,
         description: str,
         schema: Mapping[str, Any],
+        roles: ModelRoles,
     ) -> Extractor: ...
 
     async def delete(self, extractor_id: int) -> None: ...
+
+    async def serve(
+        self, extractor_id: int, source_values: Mapping[str, Any]
+    ) -> dict[str, Any]: ...
 
 
 def extractor_routes(extractors: _ExtractorService) -> APIRouter:
@@ -57,13 +69,17 @@ def extractor_routes(extractors: _ExtractorService) -> APIRouter:
         return [ExtractorView.of(extractor) for extractor in found]
 
     @router.get("/{extractor_id}")
-    async def get(extractor_id: int) -> ExtractorView:
-        return ExtractorView.of(await extractors.get(extractor_id))
+    async def get(extractor_id: int) -> ExtractorDetailView:
+        return ExtractorDetailView.of_detail(await extractors.detail(extractor_id))
 
     @router.put("/{extractor_id}")
     async def update(extractor_id: int, payload: ExtractorUpdate) -> ExtractorView:
         updated = await extractors.update(
-            extractor_id, payload.name, payload.description, payload.document
+            extractor_id,
+            payload.name,
+            payload.description,
+            payload.document,
+            ModelRoles(payload.specimen_model_id, payload.serving_model_id),
         )
         return ExtractorView.of(updated)
 
@@ -72,11 +88,17 @@ def extractor_routes(extractors: _ExtractorService) -> APIRouter:
         await extractors.delete(extractor_id)
         return Response(status_code=HTTP_204_NO_CONTENT)
 
+    @router.post("/{extractor_id}/serve")
+    async def serve(extractor_id: int, payload: ServeRequest) -> ServeView:
+        derived = await extractors.serve(extractor_id, payload.source_values)
+        return ServeView(derived_values=derived)
+
     return router
 
 
-def create_app(extractors: _ExtractorService, lifespan: Lifespan | None = None) -> FastAPI:
+def create_app(routers: Sequence[APIRouter], lifespan: Lifespan | None = None) -> FastAPI:
     app = FastAPI(title="ExtractLayer", lifespan=lifespan)
     install_error_handlers(app)
-    app.include_router(extractor_routes(extractors))
+    for router in routers:
+        app.include_router(router)
     return app

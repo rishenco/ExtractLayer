@@ -5,11 +5,29 @@ from typing import Any
 import psycopg
 import pytest
 
-from extractlayer.repo import extractors as extractors_repo
-from extractlayer.repo.extractors import PostgresExtractorRepo
-from extractlayer.repo.postgres import apply_migrations
+from extractlayer.domain.extractor import ExtractorEdit, ModelRoles
+from extractlayer.domain.schema import ExtractorSchema
+from extractlayer.repo.pg import extractors as extractors_repo
+from extractlayer.repo.pg.db import apply_migrations
+from extractlayer.repo.pg.extractors import PostgresExtractorRepo
 
 SCHEMA: dict[str, Any] = {"type": "object", "properties": {"total": {"type": "number"}}}
+MIGRATIONS = 2
+
+
+def edit(
+    previous: ExtractorSchema,
+    document: dict[str, Any],
+    name: str = "Invoices",
+    description: str = "line items",
+) -> ExtractorEdit:
+    return ExtractorEdit(
+        name=name,
+        description=description,
+        schema=ExtractorSchema.parse(document),
+        previous=previous,
+        roles=ModelRoles(specimen_model_id=None, serving_model_id=None),
+    )
 
 
 def test_migrations_build_the_schema_from_an_empty_database(empty_database: str) -> None:
@@ -32,7 +50,9 @@ def test_migrations_build_the_schema_from_an_empty_database(empty_database: str)
         "id",
         "name",
         "schema",
+        "serving_model_id",
         "source_columns",
+        "specimen_model_id",
         "updated_at",
     ]
 
@@ -44,7 +64,7 @@ def test_migrations_are_safe_to_re_run(empty_database: str) -> None:
         applied = connection.execute("SELECT count(*) FROM _yoyo_migration").fetchone()
         rows = connection.execute("SELECT count(*) FROM extractlayer.extractors").fetchone()
     assert applied is not None
-    assert applied[0] == 1
+    assert applied[0] == MIGRATIONS
     assert rows is not None
     assert rows[0] == 0
 
@@ -64,7 +84,10 @@ async def test_a_row_maps_by_column_name_rather_than_position(
     extractors: PostgresExtractorRepo,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    shuffled = "updated_at, source_columns, schema, description, id, created_at, name"
+    shuffled = (
+        "updated_at, source_columns, serving_model_id, schema, description, id,"
+        " specimen_model_id, created_at, name"
+    )
     monkeypatch.setattr(extractors_repo, "COLUMNS", shuffled)
     created = await extractors.create("Invoices", "line items", SCHEMA, ["body", "subject"])
     assert created.name == "Invoices"
@@ -79,7 +102,8 @@ async def test_an_update_replaces_name_description_and_schema(
 ) -> None:
     created = await extractors.create("Invoices", "line items", SCHEMA, ["body"])
     edited: dict[str, Any] = {"type": "object", "properties": {"currency": {"type": "string"}}}
-    updated = await extractors.update(created.id, "Receipts", "totals", edited)
+    replacement = edit(created.schema, edited, "Receipts", "totals")
+    updated = await extractors.update(created.id, replacement)
     assert updated is not None
     assert (updated.name, updated.description) == ("Receipts", "totals")
     assert updated.schema.document == edited
@@ -90,7 +114,8 @@ async def test_an_update_replaces_name_description_and_schema(
 async def test_an_update_of_an_absent_extractor_finds_nothing(
     extractors: PostgresExtractorRepo,
 ) -> None:
-    assert await extractors.update(4321, "Receipts", "totals", SCHEMA) is None
+    absent = edit(ExtractorSchema.parse(SCHEMA), SCHEMA, "Receipts", "totals")
+    assert await extractors.update(4321, absent) is None
 
 
 async def test_a_deleted_extractor_is_gone(extractors: PostgresExtractorRepo) -> None:
