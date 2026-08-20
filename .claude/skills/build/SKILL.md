@@ -60,4 +60,4 @@ Re-run `make check` after fixes. Then run `/compound` on anything either agent f
 
 Commit in the steps of the plan, not as one blob. Push to the branch and open a pull request using the template. The body carries the plan link, the criteria with their evidence, the open questions and assumptions taken, and what you chose not to do.
 
-Then stop. The pull request is the second gate and it belongs to the human.
+Then subscribe to the pull request's activity and stop. The pull request is the second gate and it belongs to the human.
