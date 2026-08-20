@@ -44,7 +44,7 @@ file import this change leaves alone.
       unknown kind is a named error at model creation, the `dummy` kind runs with no network, and a
       model returning a row the schema rejects is a 502.
 - [ ] B9 Both roles are set through `PUT /extractors/{id}`; a role naming another extractor's model
-      is rejected by name at the service and refused by the database's composite foreign key.
+      is rejected by name.
 - [ ] B10 `GET /extractors/{id}` carries its datasets' ids, names and descriptions, and its
       non-archived models' ids, kinds and known datasets.
 - [ ] B11 A schema edit rewrites stored rows in the same write: an added column reads null on older
@@ -114,8 +114,7 @@ per-schema cache of the nullable validator, which is a cache with no bound.
    `repo/datasets.py`, `repo/rows.py`, `repo/extractors.py`, `tests/test_extractors_repo.py`,
    `tests/test_models_repo.py`, `tests/test_datasets_repo.py` — proves it:
    `pytest -q tests/test_extractors_repo.py tests/test_models_repo.py tests/test_datasets_repo.py`,
-   which applies both migrations twice from empty, pages a seeded set and refuses a cross-extractor
-   role. (B2, B5, B6, B9, B11)
+   which applies both migrations twice from empty and pages a seeded set. (B2, B5, B6, B11)
 4. Services and the executor seam — files: `extractlayer/service/models.py`,
    `service/datasets.py`, `service/extractors.py`, `repo/executors.py`,
    `tests/test_models_service.py`, `tests/test_datasets_service.py`, `tests/test_serve.py` —
@@ -129,21 +128,21 @@ per-schema cache of the nullable validator, which is a cache with no bound.
 
 ## Risks & open
 
-- `models` and `extractors` reference each other: the child carries its owner, the owner names two
-  of its children. The role columns are nullable, so 0002 creates `models` first and then alters
-  `extractors`, and no insert is stuck waiting on the other side. `UNIQUE (id, extractor_id)` on
-  `models` makes each role a composite foreign key to `(id, extractor_id)`, so the database refuses
-  a role naming another extractor's model instead of trusting the service to.
+- `models` and `extractors` reference each other, so 0002 creates `models` first and then alters
+  `extractors` to add both role columns. Visible as a failing `yoyo apply` in step 3.
 - Archiving reads the extractor's roles then writes the model, which two calls cannot make atomic.
-  Taken: one conditional `UPDATE ... WHERE NOT EXISTS (the role query)`, re-read to name the error.
+  Taken: one conditional `UPDATE ... WHERE NOT EXISTS (the role query)`, re-reading the row to tell
+  "not found" from "in use" so the error stays named. Reversible to read-then-write.
 - `dead` is required on every row of `POST /rows`, because `tests/test_http.py:133` pins that
   nothing is defaulted. Noisy for the common case; reversible by making it `bool | None`.
-- Every proof above assumes an installed workspace, a Postgres on 5432, and `pytest`/`mypy` from
-  the interpreter holding those dependencies. A step whose command cannot run is claimed as nothing.
+- Every proof above assumes the workspace installed and a Postgres answering on 5432, and that
+  `pytest` and `mypy` resolve to the interpreter holding the workspace's dependencies rather than
+  an isolated tool shim. A step whose command cannot be executed is claimed as nothing.
 - An extractor's deletion cascades to its datasets, rows and models, and a dataset's to its rows,
   because an extractor owns them and no route deletes them separately. Visible as a foreign key
   violation on `DELETE /extractors/{id}`; reversible in the migration before production rows exist.
 - `GET /datasets` carries no extractor filter, since `GET /extractors/{id}` embeds them already.
 - The nullable validator is rebuilt per row validated; reversible by building it once per request.
 - `known_datasets` is `int[]` with no precedent in `repo/`. Step 3 fails at the round-trip test if
-  psycopg does not map it to `list[int]`; the fallback is `jsonb`, changing migration and doc together.
+  psycopg does not map it to `list[int]`; the fallback is `jsonb`, changing the migration and the
+  architecture's table line together.
