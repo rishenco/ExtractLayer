@@ -9,6 +9,8 @@ CODE_MAX=400
 DOC_MAX=200
 AGENTS_MAX=120
 README_MAX=120
+PLAN_MAX=200
+TLDR_MAX=15
 
 found=0
 report() {
@@ -37,6 +39,15 @@ while IFS= read -r f; do
   n="$(el_line_count "$f")"
   [ "$n" -gt "$max" ] && report "$f" "$n" "$max"
 done < <(el_repo_files | grep -E '^(docs/|[A-Z]+\.md$)' | grep -vE '^(docs/decisions/|CHANGELOG\.md$)' || true)
+
+h2="$(printf '\043\043')"
+while IFS= read -r f; do
+  [ -f "$f" ] || continue
+  n="$(el_line_count "$f")"
+  [ "$n" -gt "$PLAN_MAX" ] && report "$f" "$n" "$PLAN_MAX"
+  t="$(awk -v h="$h2" 'index($0, h " ") == 1 { p = 0 } $0 == h " TL;DR" { p = 1; next } p' "$f" | awk 'END { print NR }')"
+  [ "$t" -gt "$TLDR_MAX" ] && report "$f (TL;DR)" "$t" "$TLDR_MAX"
+done < <(el_repo_files | grep -E '(^|/)work/[^/]+/plan\.md$' || true)
 
 [ "$found" -eq 0 ] && exit 0
 echo

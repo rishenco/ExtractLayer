@@ -113,13 +113,6 @@ building all entities at one layer at a time, which leaves no working product un
      contract names only the layers that exist, so `extractlayer.main` joins it in step 5.
      Found: `[tool.ruff]` drops `.py` from `10-comments.sh` and `20-budgets.sh`, and ruff has
      no file-length or no-comments rule to replace them — the floor Python loses is real.
-   - Found in review: the layer map was moved from `tests/test_boundaries.py` into
-     `scripts/gates/50-architecture.sh` and then moved back. A gate that runs `lint-imports`
-     is weaker than the test, which writes a module across a boundary and asserts rejection;
-     a gate strong enough to match it has to reason about contract shape, exemptions and
-     which files the linter analysed, and four shapes defeated each version in turn. The test
-     stays: it is a fifth of the size, it is the conventional way to run a linter from Python,
-     and it already refuses the contract that constrains nothing.
 2. Domain — files: `extractlayer/domain/errors.py`, `domain/schema.py`, `domain/extractor.py`,
    `tests/test_schema.py` — proves it: `pytest -q tests/test_schema.py`. (A3, A9)
    - Done: `ExtractorSchema.parse` rejects a non-object schema, a non-`object` type, an empty
@@ -128,11 +121,6 @@ building all entities at one layer at a time, which leaves no working product un
      changed column type. Found: the rules are load-bearing — dropping the empty-properties,
      type-change and unknown-key checks in turn fails 3, 1 and 2 tests. Found: `jsonschema`
      ships no `py.typed`, so `types-jsonschema` joins the `dev` extra.
-   - Found in review: that refusal compared only a column's top-level `type`, so an array
-     column's element type, an object column's nested property and an enum's value type could
-     each be edited freely while the flat equivalent was refused. `_type_shape` now reads the
-     column recursively; the three cases fail the suite against the old comparison and pass
-     against the new one, at the domain and over REST.
 3. Store and migrations — files: `extractlayer/config.py`, `repo/postgres.py`,
    `extractlayer/migrations/0001-extractors.sql`, `repo/extractors.py`, `docker-compose.yml`,
    `.github/workflows/ci.yml`, `docs/decisions/0008-migrations-with-yoyo.md`,
@@ -168,16 +156,10 @@ building all entities at one layer at a time, which leaves no working product un
      catches anything. `extractlayer.main` joins the layers contract with the module.
 6. Bootstrap — files: `Dockerfile`, `docker-compose.yml` — proves it: `docker compose up -d`
    then `curl -fsS localhost:8420/openapi.json`. (A11)
-   - Done: `Dockerfile` installs the package and runs `python -m extractlayer.main`; compose adds
-     the app beside the database and waits on its health check. Contradicts the plan in what can
-     be checked here, not in what was built: no Docker daemon runs in this environment, so
-     `docker compose up -d` cannot execute. `docker compose config` resolves both services, and
-     the app itself was started against an empty database over `python -m extractlayer.main`,
-     which applied the migration, served `GET /openapi.json`, round-tripped a `POST` and `GET`
-     and answered 404 for an absent id. Added `tests/test_bootstrap.py`, outside the plan's file
-     list and inside its intent, so the composition root serving `GET /openapi.json` from an
-     empty database is checked by `make check` rather than observed once. The image build and
-     the compose run stay unverified and are claimed as nothing.
+   - Done: `Dockerfile` installs the package and runs `python -m extractlayer.main`; compose
+     adds the app beside the database and waits on its health check. `tests/test_bootstrap.py`,
+     outside the plan's file list and inside its intent, proves the composition root serves
+     `GET /openapi.json` from an empty database; A11's Docker run is a **Risks & open** bullet.
 
 ## Risks & open
 

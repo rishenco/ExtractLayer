@@ -10,6 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The product design: vision, the implementation description (entities, storage, API, workflows, layer map), and decision records (`docs/`).
 - The development process: `make check` as the executable definition of done (`scripts/gates/`), the plan → build → compound loop as skills, one approved document per change (`work/<slug>/plan.md`), independent claim auditing and adversarial review, enforcement hooks, and CI running the same command as local.
 - A pull request an agent opens gets a listener: the session subscribes to its CI and review activity instead of leaving it unwatched.
+- A plan opens with a TL;DR — afterwards, decisions, shape — and approval reads from it; `make check` caps the summary at 15 lines and the plan at 200.
 - `/reconcile` checks the written record against the repo — citations naming things that do not exist, prose contradicting an executable, one rule stated in several files — fixes what is mechanical and reports what needs a decision.
 
 ### Fixed

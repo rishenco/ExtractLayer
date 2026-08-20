@@ -2,6 +2,17 @@
 
 Status: Draft
 
+## TL;DR
+
+- Afterwards: an extractor owns datasets of rows and models, `POST /extractors/{id}/serve` turns
+  one source row into a derived row, and the `dummy` model kind keeps the whole path inside
+  `make check` with no network.
+- Decided: models archive instead of deleting (ADR 0013); `POST /rows` lands whole or not at all;
+  serve falls back to the specimen model; a schema edit rewrites stored rows in the same
+  transaction; file import waits for a later change.
+- Shape: row validation is a domain method on the extractor; execution is a `Protocol` chosen by
+  model `kind` at the composition root; serve is a method on `ExtractorService`.
+
 ## Problem / Intent
 
 An extractor is a name, a source-column list and a schema with nothing to run and nothing to run
@@ -15,13 +26,14 @@ Afterwards: an extractor owns datasets of rows and models; `POST /extractors/{id
 executes deterministically, so the serve path is covered by `make check` with no network call.
 Second of four changes; jobs and MCP follow.
 
-Objections: `docs/architecture.md` calls models "immutable and deletable" and lists
-`DELETE /models/{id}`. Decided against it — a model is archived, never deleted, and a model bound
-to a model role cannot be archived, because eval history and `known_datasets` name models by id and
-a hard delete makes that history unreadable. ADR 0013 records it; the architecture is amended.
-Decided: `POST /rows` rejects the whole batch when any row fails validation, because a half-applied
-batch has no way to report which half landed; best-effort per-row rejection is a property of the
-file import this change leaves alone.
+Objections:
+- `docs/architecture.md` calls models "immutable and deletable" and lists `DELETE /models/{id}`.
+  Decided against: a model is archived, never deleted, and a model bound to a role cannot be
+  archived — eval history and `known_datasets` name models by id, and a hard delete makes that
+  history unreadable. ADR 0013 records it; the architecture is amended.
+- `POST /rows` rejects the whole batch when any row fails validation: a half-applied batch has no
+  way to report which half landed. Best-effort per-row landing belongs to the file import this
+  change leaves alone.
 
 ## Criteria
 
@@ -86,21 +98,26 @@ file import this change leaves alone.
 
 The change repeats change 1's vertical slice for three entities at once, because they only prove
 themselves together: a row is meaningless without an extractor to validate it against, and `serve`
-is meaningless without a model to run. Row validation lands in `domain` — it is an invariant of the
-extractor, not a use case — so `Extractor.validated_row` splits a flat `values` map by
-`source_columns` and hands the rest to `ExtractorSchema.derived_values`. The executor is a
-`Protocol` the extractor service declares and a mapping of `kind` to implementation the composition
-root passes, so a later OpenRouter executor is a second entry rather than an edit. `dummy` is not a
-stopgap: a model answering null for every column is the constant baseline an eval measures against,
-and it keeps `make check` off the network permanently.
+is meaningless without a model to run.
+
+Row validation lands in `domain` — it is an invariant of the extractor, not a use case.
+`Extractor.validated_row` splits a flat `values` map by `source_columns` and hands the rest to
+`ExtractorSchema.derived_values`. The executor is a `Protocol` the extractor service declares and
+a mapping of `kind` to implementation the composition root passes, so a later OpenRouter executor
+is a second entry rather than an edit. `dummy` is not a stopgap: a model answering null for every
+column is the constant baseline an eval measures against, and it keeps `make check` off the
+network permanently.
 
 Serve is a method on `ExtractorService`, not a service of its own: it is an extractor use case at
-an extractor route, and a `ServeService` would own no entity. Rejected: the schema-edit row rewrite
-as a second repo call — two calls mean two transactions and a schema that outruns its rows, so the
-service computes the added and removed columns from the domain and the extractor repo applies them
-beside the schema write in one transaction. Rejected: archiving as `DELETE /models/{id}` with
-soft-delete semantics, since a `DELETE` leaving the row readable lies on the wire. Rejected: a
-per-schema cache of the nullable validator, which is a cache with no bound.
+an extractor route, and a `ServeService` would own no entity.
+
+Rejected:
+- The schema-edit row rewrite as a second repo call. Two calls mean two transactions and a schema
+  that outruns its rows, so the service computes the added and removed columns and the extractor
+  repo applies them beside the schema write in one transaction.
+- Archiving spelled `DELETE /models/{id}` with soft-delete semantics. A `DELETE` that leaves the
+  row readable lies on the wire.
+- A per-schema cache of the nullable validator. A cache with no bound.
 
 ## Steps
 
