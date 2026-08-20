@@ -10,6 +10,7 @@ Development runs through agents, gated by an executable definition of done.
 /plan  <idea>    intent, criteria, steps, design review  work/<slug>/plan.md        → you approve
 /build <slug>    execute, verify, code review            a green branch             → you approve the PR
 /compound        turn findings into gates                tests, gates, hooks
+/tune            turn corrections into prompts           edits to skills and agents
 /reconcile       realign the prose with the repo         fixes and open questions
 ```
 
