@@ -1,0 +1,19 @@
+extends: existence
+message: "Cut '%s' — it carries no information."
+level: error
+ignorecase: true
+tokens:
+  - it'?s (important|worth) (to note|noting)
+  - it is (important|worth) (to note|noting)
+  - keep in mind that
+  - in conclusion
+  - as an AI
+  - let'?s dive in
+  - delve (in)?to
+  - seamlessly integrate
+  - leverage the power of
+  - comprehensive solution
+  - in today'?s fast-paced
+  - simply put
+  - lorem ipsum
+  - I hope this helps

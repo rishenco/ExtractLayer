@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://extractlayer:extractlayer@db:5432/extractlayer
+      HOST: 0.0.0.0
+      API_PORT: 8420
+    ports:
+      - "8420:8420"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: extractlayer
+      POSTGRES_PASSWORD: extractlayer
+      POSTGRES_DB: extractlayer
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U extractlayer -d extractlayer"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  db:

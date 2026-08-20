@@ -69,11 +69,11 @@ Dependencies point inward: `transport`, `service` and `repo` sit above `domain`,
 | Layer | Holds | May import | Never |
 | --- | --- | --- | --- |
 | `domain` | Entities, invariants, schema structure — one file per entity | nothing in this repo | I/O, frameworks, SQL, HTTP |
-| `service` | Use cases, jobs, metrics; declares what it consumes in `service.dependencies` | `domain` | `repo`, `transport`, transport types |
-| `repo` | Adapters satisfying `service.dependencies` structurally: DB, external APIs | `domain` | `service`, `transport` |
-| `transport` | Transport in, DTO out; declares the services it drives in `transport.dependencies` | `domain` | `service`, `repo` |
+| `service` | Use cases, jobs, metrics; declares what it consumes beside the use case that consumes it | `domain` | `repo`, `transport`, transport types |
+| `repo` | Adapters satisfying the protocols `service` declares, structurally: DB, external APIs | `domain` | `service`, `transport` |
+| `transport` | Transport in, DTO out; declares the services it drives beside the transport that drives them | `domain` | `service`, `repo` |
 
-A consumer declares the interface it needs; implementations satisfy it by shape, never by import (`docs/decisions/0007-layers-own-their-dependencies.md`). Wiring lives at the composition root, `extractlayer/main.py` — the only module that names a concrete adapter. The workspace is the repository root; the backend language is Python (`docs/decisions/0005-backend-python.md`), boundaries held as `[tool.importlinter]` contracts in `pyproject.toml` and run by a boundary test under `pytest`.
+A consumer declares the interface it needs; implementations satisfy it by shape, never by import (`docs/decisions/0007-layers-own-their-dependencies.md`). Wiring lives at the composition root, `extractlayer/main.py` — the only module that names a concrete adapter, and the only one that reads configuration: `extractlayer.config` is a sibling of the three outer layers, so none of them may import it. The workspace is the repository root; the backend language is Python (`docs/decisions/0005-backend-python.md`), boundaries held as `[tool.importlinter]` contracts in `pyproject.toml` and run by a boundary test under `pytest`.
 
 The UI is TypeScript/React, sliced `pages → features → entities → shared`: a slice imports only strictly lower slices, cross-imports between features go through `entities` or `shared`, server-state access is confined to `features` and below.
 

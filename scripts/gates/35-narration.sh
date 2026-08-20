@@ -7,6 +7,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 PHRASES=(
   "the founder"
+  "the (owner|reviewer) (asked|wanted|requested|said)"
   "first[- ]slice"
   "this (session|conversation)"
   "our (chat|conversation)"

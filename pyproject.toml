@@ -1,0 +1,94 @@
+[project]
+name = "extractlayer"
+version = "0.1.0"
+description = "LLM-based structured data extraction"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "psycopg[binary,pool]>=3.2",
+    "yoyo-migrations>=9",
+    "jsonschema>=4.23",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.15",
+    "mypy>=1.11",
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.27",
+    "import-linter>=2.13",
+    "types-jsonschema>=4.23",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["extractlayer*"]
+
+[tool.setuptools.package-data]
+extractlayer = ["migrations/*.sql"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = [
+    "A",
+    "ARG",
+    "ASYNC",
+    "B",
+    "C4",
+    "DTZ",
+    "E",
+    "ERA",
+    "F",
+    "FURB",
+    "I",
+    "N",
+    "PERF",
+    "PIE",
+    "PL",
+    "PTH",
+    "RET",
+    "RUF",
+    "S101",
+    "SIM",
+    "T20",
+    "TID",
+    "UP",
+    "W",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+exclude = ['^\.venv/']
+
+[[tool.mypy.overrides]]
+module = "yoyo.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.importlinter]
+root_packages = ["extractlayer"]
+
+[[tool.importlinter.contracts]]
+name = "Dependencies point inward"
+type = "layers"
+layers = [
+    "extractlayer.main",
+    "extractlayer.transport | extractlayer.service | extractlayer.repo | extractlayer.config",
+    "extractlayer.domain",
+]

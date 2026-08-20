@@ -1,0 +1,13 @@
+extends: existence
+message: "'%s' is session narration — a committed doc has one role and no memory."
+level: error
+ignorecase: true
+tokens:
+  - the founder
+  - first[- ]slice
+  - this (session|conversation)
+  - our (chat|conversation)
+  - review round
+  - was removed by
+  - previous implementation
+  - design session

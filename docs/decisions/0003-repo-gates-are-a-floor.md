@@ -8,7 +8,7 @@ Date: 2026-08-14 Status: Accepted
 
 They are also wrong in ways a regex is always wrong. Adversarial review found the comment gate both missing real comments and rejecting valid code across two rounds; it still cannot see that a `#` sits inside a heredoc or a Go raw string, because it matches one line at a time. `eslint`, `ruff`, `golangci-lint` and `vale` parse instead of guessing, are maintained, and already encode these rules.
 
-Reinventing a maintained tool is the failure this repo's own rules name at `AGENTS.md:32`. Keeping the floor forever would be that failure.
+Reinventing a maintained tool is the failure `AGENTS.md` names under **Shape of the code**: lean on well-maintained libraries before writing your own. Keeping the floor forever would be that failure.
 
 ## Decision
 

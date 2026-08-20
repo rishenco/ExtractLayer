@@ -8,7 +8,7 @@ Creating tables by re-running DDL on startup works exactly once: it cannot alter
 
 ## Decision
 
-Schema changes are numbered SQL migrations in `extractlayer/repo/migrations`, applied by `yoyo-migrations` when the service starts. Migrations are the only way the schema changes. yoyo over Alembic because it applies plain SQL and does not require SQLAlchemy, which this repository does not use.
+Schema changes are numbered SQL migrations in `extractlayer/migrations`, applied by `yoyo-migrations` at the composition root when the service starts. Migrations are not Python and join no layer's import graph, so they sit beside the layers rather than inside one. Migrations are the only way the schema changes. yoyo over Alembic because it applies plain SQL and does not require SQLAlchemy, which this repository does not use.
 
 ## Consequences
 

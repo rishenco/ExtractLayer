@@ -120,6 +120,12 @@ expect 35-narration.sh 0 "timeless markdown passes"
 fixture work/nb/claims.md 'Restated after the second review round.'
 expect 35-narration.sh 1 "a ledger under work/ has no memory of its review either"
 
+fixture attributed.md 'Found in review: the owner asked for a gate instead of a test.'
+expect 35-narration.sh 1 "a doc naming who asked for a change is caught"
+
+fixture ownership.md 'The owner of a dataset decides who may read it.'
+expect 35-narration.sh 0 "a doc about ownership is not attribution"
+
 fixture docs/lessons.md '- Keep ledgers verdict-only — found when the founder caught a narrated preamble.'
 expect 35-narration.sh 0 "lessons provenance may name who found it"
 
@@ -140,6 +146,17 @@ expect 45-doc-links.sh 0 "a placeholder segment is not a path to resolve"
 
 fixture work/wl/notes.md 'See docs/does-not-exist.md.'
 expect 45-doc-links.sh 0 "references inside work/ are not checked"
+
+fixture cited.md 'The rule against reinventing a tool is at AGENTS.md:32.'
+expect 45-doc-links.sh 1 "a reference naming a line number is caught"
+
+fixture output.md 'Typing reports it:
+
+```
+extractlayer/main.py:12: error: incompatible type
+```
+'
+expect 45-doc-links.sh 0 "a line number inside a fenced block is tool output, not a citation"
 
 fixture ws1/package.json '{"name":"fixture","scripts":{}}'
 expect 50-architecture.sh 1 "workspace without boundary config is caught"
@@ -284,6 +301,46 @@ Everything works.'
 changed "ui/src/thing.ts" "$WORK/work/cl5/claims.md"
 EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
   expect 75-claims.sh 1 "prose with no claim blocks"
+
+add_file work/cl6/claims.md '## C1
+Claim: make check passes.
+Evidence: with this ledger unwritten, every other gate reported ok.
+Verify: make check
+Verdict: SUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl6/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "evidence that describes the ledger rather than the tree blocks"
+
+add_file work/cl7/claims.md '## C1
+Claim: make check passes.
+Evidence: make check prints all gates pass and exits 0.
+Verify: make check
+Verdict: SUPPORTED
+
+Verified: I reran it and it passed.'
+changed "ui/src/thing.ts" "$WORK/work/cl7/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "a line outside the claim blocks blocks"
+
+add_file work/cl8/claims.md 'Six claims were re-audited after the review.
+
+## C1
+Claim: make check passes.
+Evidence: make check prints all gates pass and exits 0.
+Verify: make check
+Verdict: SUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl8/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 1 "a preamble blocks"
+
+add_file work/cl9/claims.md '## C1
+Claim: make check passes.
+Evidence: make check prints all gates pass and exits 0.
+Verify: make check
+Verdict: SUPPORTED'
+changed "ui/src/thing.ts" "$WORK/work/cl9/claims.md"
+EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
+  expect 75-claims.sh 0 "a ledger of nothing but claim blocks and verdicts passes"
 
 changed "docs/architecture.md"
 EL_CHANGED_LIST="$WORK/changed" EL_EXEMPT_LIST="$WORK/exempt" \
