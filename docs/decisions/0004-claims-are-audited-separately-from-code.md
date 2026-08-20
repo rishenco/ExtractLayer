@@ -18,7 +18,7 @@ Claims are a separate artifact with a separate auditor.
 
 The `claim-auditor` subagent reproduces every claim from scratch and writes a verdict of `SUPPORTED`, `UNSUPPORTED` or `FALSE`. Its rules of evidence are explicit: the transcript is not evidence, another agent's report of a command is not evidence, and a citation counts only if the cited line says what was claimed. Where a claim rests on a test, it breaks the behaviour and confirms the test fails — a test that passes both ways is how a true sentence hides a false one.
 
-`scripts/gates/75-claims.sh` fails while any verdict is `UNSUPPORTED`, `FALSE` or missing, and when a ledger contains no claims at all.
+`scripts/gates/75-claims.sh` fails while any verdict is `UNSUPPORTED`, `FALSE` or missing, and when a ledger contains no claims at all. A ledger is claim blocks and verdicts and nothing else: a line outside one fails, so no preamble announces an outcome no verdict states, and evidence pointing at the ledger rather than at the tree fails with it.
 
 The `adversarial-reviewer` keeps code quality, layering and shape, and is told the audit is not its job.
 

@@ -32,7 +32,7 @@ Tests run against Postgres rather than a substitute engine (`docs/decisions/0010
 ```
 AGENTS.md         operating rules, capped and enforced
 CLAUDE.md         thin Claude-specific layer over AGENTS.md
-docs/             vision, architecture, decisions, lessons
+docs/             vision, architecture, decisions, lessons, working
 extractlayer/     the service: domain, service, repo, transport, migrations
 tests/            the workspace's own checks
 pyproject.toml    the workspace: dependencies, lint, types, layer contracts

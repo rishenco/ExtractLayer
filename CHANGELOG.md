@@ -13,4 +13,4 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- `make check` covers markdown prose and unowned TODOs again, resolves doc references in files git does not track yet, stops reading words like `framework/` as broken paths, and ignores a Python virtualenv at the repository root.
+- `make check` covers markdown prose and unowned TODOs again, resolves doc references in files git does not track yet, rejects a doc citation that names a line number, stops reading words like `framework/` as broken paths, and ignores a Python virtualenv at the repository root.

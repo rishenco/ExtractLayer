@@ -147,6 +147,17 @@ expect 45-doc-links.sh 0 "a placeholder segment is not a path to resolve"
 fixture work/wl/notes.md 'See docs/does-not-exist.md.'
 expect 45-doc-links.sh 0 "references inside work/ are not checked"
 
+fixture cited.md 'The rule against reinventing a tool is at AGENTS.md:32.'
+expect 45-doc-links.sh 1 "a reference naming a line number is caught"
+
+fixture output.md 'Typing reports it:
+
+```
+extractlayer/main.py:12: error: incompatible type
+```
+'
+expect 45-doc-links.sh 0 "a line number inside a fenced block is tool output, not a citation"
+
 fixture ws1/package.json '{"name":"fixture","scripts":{}}'
 expect 50-architecture.sh 1 "workspace without boundary config is caught"
 expect 60-workspaces.sh 1 "workspace without a check script is caught"
