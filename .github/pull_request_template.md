@@ -30,8 +30,9 @@ Plan: `work/<slug>/plan.md`
 
 ## Review findings
 
-<!-- Blocking findings from adversarial-reviewer and how each was resolved. Minor findings
-     left unfixed, with the reason. -->
+<!-- Blocking findings from plan-reviewer and adversarial-reviewer, and how each was
+     resolved. Minor findings left unfixed, with the reason. Neither review runs behind a
+     gate, so an empty section here means nobody looked. -->
 
 ## Compounded
 

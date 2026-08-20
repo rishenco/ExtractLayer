@@ -68,6 +68,14 @@ What could go wrong and what makes it visible when it does. Each open question w
 - A new dependency, a schema change, or a boundary change in `docs/architecture.md` is an ADR in `docs/decisions/`, written as part of the step that needs it. An ADR argues from what the product needs now: its context is the constraint that forces the decision, never where the question came up. A reader holding only `docs/` must find it complete.
 - Decisions are recorded as requirements — "X, because Y", never a transcript of who said what. **Objections** is the one line that keeps the argument itself.
 
+## Review
+
+Run the `plan-reviewer` subagent before you ask for approval. It judges the design: contracts, scale, reuse, responsibilities, and what the next capability in `docs/vision.md` costs on this shape. A wrong shape approved here is the most expensive thing this loop can produce.
+
+Fix every blocking finding in the plan. A finding you do not take goes under **Risks & open** with the reason it loses, so the human approves knowing what was raised and declined.
+
+No gate checks that this ran, so the record is the only trace: a plan that reached approval with nothing raised and nothing declined is one nobody attacked.
+
 ## Approval
 
 Print the **TL;DR** and **Criteria** — nothing more; the file holds the rest — and ask the human to approve. On approval, set `Status: Approved` in the file. `/build` refuses to run without it. If the human is not reachable, leave it Draft and stop — an unapproved plan is where the background loop is supposed to wait.

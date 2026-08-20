@@ -11,7 +11,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The development process: `make check` as the executable definition of done (`scripts/gates/`), the plan → build → compound loop as skills, one approved document per change (`work/<slug>/plan.md`), independent claim auditing and adversarial review, enforcement hooks, and CI running the same command as local.
 - A pull request an agent opens gets a listener: the session subscribes to its CI and review activity instead of leaving it unwatched.
 - A plan opens with a TL;DR — afterwards, decisions, shape — and approval reads from it; `make check` caps the summary at 15 lines and the plan at 200.
+- The development process: `make check` as the executable definition of done (`scripts/gates/`), the plan → build → compound loop as skills, one approved document per change (`work/<slug>/plan.md`), a design review before approval and an adversarial code review after the build, independent claim auditing, enforcement hooks, and CI running the same command as local.
 - `/reconcile` checks the written record against the repo — citations naming things that do not exist, prose contradicting an executable, one rule stated in several files — fixes what is mechanical and reports what needs a decision.
+- `/tune` reads a session's course corrections back into the harness — the skill, subagent, or rule that would have made each one unnecessary — and hands what a check could catch to `/compound`.
 
 ### Fixed
 
