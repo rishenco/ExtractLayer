@@ -29,9 +29,10 @@ buys air — short sentences and bullets — never more scope:
 Status: Draft
 
 ## TL;DR
-- Afterwards: <what a user can do that they could not>
-- Decided: <one bullet per decision that could have gone the other way>
-- Shape: <where the change lands and the seam it adds, at most three bullets>
+- Afterwards: <the capabilities that exist and where their code lands>
+- Decided: <each decision that could have gone the other way, with its mechanism>
+- Shape:
+  - <component>: + <what it gains>, one sub-bullet per component touched
 
 ## Problem / Intent
 Who is blocked, on what, and how you know. Then what is different afterwards. Not the solution.
@@ -60,6 +61,7 @@ What could go wrong and what makes it visible when it does. Each open question w
 ## Rules
 
 - The TL;DR is where review starts, so it carries no fact of its own: every bullet compresses a section below, and the section wins on conflict. A decision that could have gone the other way and is absent from the TL;DR is hidden, not summarized.
+- The TL;DR speaks to the architect: capabilities, decision mechanisms, code placement. How the work is verified — gate names, test commands, `make check` — is process, and process stays in Criteria and Steps.
 - Criteria carry ids — `A1`, `A2` — and every one maps to at least one step, named by id. `/build` ticks them here.
 - A criterion no test, gate or command can settle is not a criterion. Rewrite it until one can, or move it to **Not doing**. "Works correctly", "is performant", "handles errors gracefully" are not criteria; three vague ones are worth less than one exact one.
 - Every step names its files and the check that proves it — a step with no proof is a wish — and steps are ordered so the repo is working after each one, never only at the end.

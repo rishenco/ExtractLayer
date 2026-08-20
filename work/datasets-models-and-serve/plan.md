@@ -4,14 +4,17 @@ Status: Approved
 
 ## TL;DR
 
-- Afterwards: an extractor owns datasets of rows and models, `POST /extractors/{id}/serve` turns
-  one source row into a derived row, and the `dummy` model kind keeps the whole path inside
-  `make check` with no network.
-- Decided: models archive instead of deleting (ADR 0013); `POST /rows` lands whole or not at all;
-  serve falls back to the specimen model; a schema edit rewrites stored rows in the same
-  transaction; file import waits for a later change.
-- Shape: row validation is a domain method on the extractor; execution is a `Protocol` chosen by
-  model `kind` at the composition root; serve is a method on `ExtractorService`.
+- Afterwards: dataset and model CRUDs exist; a model is a specification whose `kind` names its
+  executor, `dummy` (all-null outputs) the only kind yet; `POST /extractors/{id}/serve` turns one
+  source row into a derived row through the serving model.
+- Decided: models archive (soft-delete), never delete, and a role-bound model cannot be archived;
+  serve falls back to the specimen model when no serving model is set; a schema edit rewrites
+  stored rows in the same transaction; no file import for dataset uploads yet.
+- Shape:
+  - Extractor service: + row validation, + serve, + dataset and model use cases, + the executor
+    `Protocol`
+  - Postgres clients rewired to `repo/pg/`: + models, datasets and rows beside extractors
+  - Executors: `repo/model_executors/`, one file per kind, `dummy.py` alone for now
 
 ## Problem / Intent
 
@@ -104,7 +107,9 @@ Row validation lands in `domain` — it is an invariant of the extractor, not a 
 `Extractor.validated_row` splits a flat `values` map by `source_columns` and hands the rest to
 `ExtractorSchema.derived_values`. The executor is a `Protocol` the extractor service declares and
 a mapping of `kind` to implementation the composition root passes, so a later OpenRouter executor
-is a second entry rather than an edit. `dummy` is not a stopgap: a model answering null for every
+is a second entry rather than an edit. The repo layer groups by backend: Postgres clients sit in
+`repo/pg/` and executors in `repo/model_executors/` with one file per kind, so a new kind or a
+new store is a new file, never a rename. `dummy` is not a stopgap: a model answering null for every
 column is the constant baseline an eval measures against, and it keeps `make check` off the
 network permanently.
 
@@ -127,13 +132,16 @@ Rejected:
 2. ADR and architecture — files: `docs/decisions/0013-models-are-archived.md`,
    `docs/architecture.md` — proves it: `make check` over the edit, plus
    `grep -rn 'DELETE /models' docs/` returning nothing. (B4)
-3. Store — files: `extractlayer/migrations/0002-datasets-models.sql`, `repo/models.py`,
-   `repo/datasets.py`, `repo/rows.py`, `repo/extractors.py`, `tests/test_extractors_repo.py`,
-   `tests/test_models_repo.py`, `tests/test_datasets_repo.py` — proves it:
+3. Store — files: `extractlayer/migrations/0002-datasets-models.sql`, `repo/pg/extractors.py`
+   and `repo/pg/db.py` (today's `repo/extractors.py` and `repo/postgres.py`), `repo/pg/models.py`,
+   `repo/pg/datasets.py`, `repo/pg/rows.py`, the movers' importers (`extractlayer/main.py`,
+   `tests/conftest.py`, `tests/test_http.py`, `tests/test_extractor_service.py`),
+   `tests/test_extractors_repo.py`, `tests/test_models_repo.py`, `tests/test_datasets_repo.py` —
+   proves it:
    `pytest -q tests/test_extractors_repo.py tests/test_models_repo.py tests/test_datasets_repo.py`,
    which applies both migrations twice from empty and pages a seeded set. (B2, B5, B6, B11)
 4. Services and the executor seam — files: `extractlayer/service/models.py`,
-   `service/datasets.py`, `service/extractors.py`, `repo/executors.py`,
+   `service/datasets.py`, `service/extractors.py`, `repo/model_executors/dummy.py`,
    `tests/test_models_service.py`, `tests/test_datasets_service.py`, `tests/test_serve.py` —
    proves it: `pytest -q tests/test_models_service.py tests/test_datasets_service.py
    tests/test_serve.py`. (B4, B7, B8, B9, B10, B11)
