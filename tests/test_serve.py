@@ -33,14 +33,16 @@ class FixedExecutor:
     def __init__(self, produced: Mapping[str, Any]) -> None:
         self.produced = produced
         self.seen: list[Mapping[str, str]] = []
+        self.ran: list[Mapping[str, Any]] = []
 
     async def run(
         self,
-        _specification: ModelSpecification,
+        specification: ModelSpecification,
         _schema: ExtractorSchema,
         source_values: Mapping[str, str],
     ) -> Mapping[str, Any]:
         self.seen.append(source_values)
+        self.ran.append(specification.document)
         return self.produced
 
 
@@ -87,15 +89,16 @@ async def test_the_serving_model_is_preferred_over_the_specimen(
     model_service: ModelService,
 ) -> None:
     extractor = await extractor_service.create("Invoices", "", SCHEMA, ["body", "subject"])
-    specimen = await model_service.create(extractor.id, SPECIFICATION, [])
-    serving_model = await model_service.create(extractor.id, {"kind": "dummy", "n": 2}, [])
+    specimen = await model_service.create(extractor.id, {"kind": "dummy", "role": "specimen"}, [])
+    chosen = await model_service.create(extractor.id, {"kind": "dummy", "role": "serving"}, [])
     await extractor_service.update(
-        extractor.id, "Invoices", "", SCHEMA, ModelRoles(specimen.id, serving_model.id)
+        extractor.id, "Invoices", "", SCHEMA, ModelRoles(specimen.id, chosen.id)
     )
 
     executor = FixedExecutor({"total": 7, "currency": "EUR"})
     service = serving(extractors, models, datasets, executor)
     assert await service.serve(extractor.id, SOURCE) == {"total": 7, "currency": "EUR"}
+    assert executor.ran == [{"kind": "dummy", "role": "serving"}]
     assert executor.seen == [SOURCE]
 
 

@@ -244,3 +244,51 @@ async def test_an_extractor_carries_its_datasets_and_live_models(client: AsyncCl
     read = (await client.get(f"/extractors/{extractor_id}")).json()
     assert read["models"] == [{"id": kept["id"], "kind": "dummy", "known_datasets": [3]}]
     assert read["datasets"] == []
+
+
+async def test_a_serve_call_returns_a_derived_row_through_the_serving_model(
+    client: AsyncClient,
+) -> None:
+    extractor_id = await extractor(client)
+    model = (
+        await client.post(
+            "/models",
+            json={
+                "extractor_id": extractor_id,
+                "specification": SPECIFICATION,
+                "known_datasets": [],
+            },
+        )
+    ).json()
+    assert (
+        await client.put(f"/extractors/{extractor_id}", json=roles(serving=model["id"]))
+    ).status_code == OK
+
+    served = await client.post(
+        f"/extractors/{extractor_id}/serve", json={"source_values": {"body": "invoice 7"}}
+    )
+    assert served.status_code == OK
+    assert served.json() == {"derived_values": {"total": None}}
+
+
+async def test_a_serve_call_falls_back_to_the_specimen_over_rest(client: AsyncClient) -> None:
+    extractor_id = await extractor(client)
+    model = (
+        await client.post(
+            "/models",
+            json={
+                "extractor_id": extractor_id,
+                "specification": SPECIFICATION,
+                "known_datasets": [],
+            },
+        )
+    ).json()
+    assert (
+        await client.put(f"/extractors/{extractor_id}", json=roles(specimen=model["id"]))
+    ).status_code == OK
+
+    served = await client.post(
+        f"/extractors/{extractor_id}/serve", json={"source_values": {"body": "invoice 7"}}
+    )
+    assert served.status_code == OK
+    assert served.json() == {"derived_values": {"total": None}}
