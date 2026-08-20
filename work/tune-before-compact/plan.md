@@ -25,8 +25,9 @@ conversation with a summary, so the session that most needs tuning — long, and
 corrections length produces — is the one whose evidence goes first. A tune run afterwards reads a
 summary that already dropped the moments, and the next session earns the same corrections again.
 
-Afterwards: a manual `/compact` no longer discards an untuned conversation silently. The first one
-is deferred, the tune runs against the whole transcript, and the second compacts.
+Afterwards: a manual `/compact` no longer discards an untuned conversation silently. One is
+deferred, the tune runs against the whole transcript, and the next compacts. A deferral is owed
+again once one is spent, so a session that compacts repeatedly tunes before each.
 
 Objections: firing `/tune` on context pressure rather than on the presence of a correction invites
 the failure its own skill names, encoding a decision as a rule nobody made. Decided: fire anyway,
